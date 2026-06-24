@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { ChevronDown, LayoutGrid, List } from "lucide-react"
 import {
   categories,
@@ -15,17 +16,28 @@ import { cn } from "@/lib/utils"
 const sortOptions = ["Latest", "Price: Low to High", "Price: High to Low", "Top Rated"]
 
 export function ShopBrowser() {
-  const [activeCategory, setActiveCategory] = useState("sofas")
+  const params = useSearchParams()
+  const query = params.get("q")?.toLowerCase() ?? ""
+  const paramSort = params.get("sort")
+  const paramCategory = params.get("category")
+
+  const [activeCategory, setActiveCategory] = useState(
+    paramCategory && categories.some((c) => c.slug === paramCategory) ? paramCategory : "sofas",
+  )
   const [maxPrice, setMaxPrice] = useState(2000000)
   const [activeColor, setActiveColor] = useState<string | null>(null)
   const [activeMaterials, setActiveMaterials] = useState<string[]>([])
-  const [sort, setSort] = useState("Latest")
+  const [sort, setSort] = useState(
+    paramSort === "new" ? "Latest" : paramSort === "popular" ? "Top Rated" : "Latest",
+  )
   const [sortOpen, setSortOpen] = useState(false)
   const [view, setView] = useState<"grid" | "list">("grid")
   const [page, setPage] = useState(1)
 
-  const activeCategoryName =
-    categories.find((c) => c.slug === activeCategory)?.name ?? "All Products"
+  const searching = query.length > 0
+  const activeCategoryName = searching
+    ? `Results for “${query}”`
+    : (categories.find((c) => c.slug === activeCategory)?.name ?? "All Products")
 
   function toggleMaterial(m: string) {
     setActiveMaterials((prev) =>
@@ -34,8 +46,12 @@ export function ShopBrowser() {
   }
 
   const filtered = useMemo(() => {
-    let list = products.filter((p) => p.category === activeCategory)
-    if (list.length === 0) list = products
+    let list = searching
+      ? products.filter(
+          (p) => p.name.toLowerCase().includes(query) || p.material.toLowerCase().includes(query),
+        )
+      : products.filter((p) => p.category === activeCategory)
+    if (list.length === 0 && !searching) list = products
     list = list.filter((p) => p.price <= maxPrice)
     if (activeColor) list = list.filter((p) => p.colors.includes(activeColor))
     if (activeMaterials.length > 0) list = list.filter((p) => activeMaterials.includes(p.material))
@@ -45,7 +61,7 @@ export function ShopBrowser() {
     else if (sort === "Price: High to Low") sorted.sort((a, b) => b.price - a.price)
     else if (sort === "Top Rated") sorted.sort((a, b) => b.rating - a.rating)
     return sorted
-  }, [activeCategory, maxPrice, activeColor, activeMaterials, sort])
+  }, [activeCategory, maxPrice, activeColor, activeMaterials, sort, query, searching])
 
   return (
     <div className="grid gap-8 lg:grid-cols-[260px_1fr]">

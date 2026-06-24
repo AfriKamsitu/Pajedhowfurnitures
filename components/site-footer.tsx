@@ -4,15 +4,33 @@ import { Globe, Mail, MessageCircle, Send, Sofa } from "lucide-react"
 const columns = [
   {
     title: "Shop",
-    links: ["Sofas", "Beds", "Dining Sets", "Chairs", "Wardrobes"],
+    links: [
+      { label: "Sofas", href: "/shop?category=sofas" },
+      { label: "Beds", href: "/shop?category=beds" },
+      { label: "Dining Sets", href: "/shop?category=dining-sets" },
+      { label: "Chairs", href: "/shop?category=chairs" },
+      { label: "Wardrobes", href: "/shop?category=wardrobes" },
+    ],
   },
   {
     title: "Company",
-    links: ["About Us", "Careers", "Blog", "Press", "Contact Us"],
+    links: [
+      { label: "About Us", href: "/about" },
+      { label: "Offers", href: "/offers" },
+      { label: "Wishlist", href: "/wishlist" },
+      { label: "Cart", href: "/cart" },
+      { label: "Contact Us", href: "/contact" },
+    ],
   },
   {
-    title: "Support",
-    links: ["Help Center", "Delivery", "Returns", "Warranty", "FAQs"],
+    title: "Account",
+    links: [
+      { label: "Sign In", href: "/login" },
+      { label: "Register", href: "/register" },
+      { label: "Reset Password", href: "/reset-password" },
+      { label: "Checkout", href: "/checkout" },
+      { label: "Shop All", href: "/shop" },
+    ],
   },
 ]
 
@@ -54,13 +72,13 @@ export function SiteFooter() {
               <h3 className="text-sm font-semibold">{col.title}</h3>
               <ul className="mt-4 space-y-2.5">
                 {col.links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
                       className="text-sm text-primary-foreground/70 transition-colors hover:text-accent"
                     >
-                      {link}
-                    </a>
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>

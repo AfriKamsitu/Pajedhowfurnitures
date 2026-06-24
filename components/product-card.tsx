@@ -1,10 +1,17 @@
+"use client"
+
 import Link from "next/link"
 import Image from "next/image"
-import { Heart } from "lucide-react"
+import { Heart, ShoppingCart } from "lucide-react"
 import { type Product, formatPrice } from "@/lib/data"
 import { StarRating } from "@/components/star-rating"
+import { useStore } from "@/components/store-provider"
+import { cn } from "@/lib/utils"
 
 export function ProductCard({ product }: { product: Product }) {
+  const { addToCart, toggleWishlist, isInWishlist } = useStore()
+  const wished = isInWishlist(product.id)
+
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-shadow hover:shadow-md">
       <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
@@ -23,10 +30,21 @@ export function ProductCard({ product }: { product: Product }) {
           </span>
         )}
         <button
-          aria-label="Add to wishlist"
-          className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-card text-muted-foreground shadow-sm transition-colors hover:text-accent"
+          aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+          onClick={() => toggleWishlist(product)}
+          className={cn(
+            "absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-card shadow-sm transition-colors",
+            wished ? "text-accent" : "text-muted-foreground hover:text-accent",
+          )}
         >
-          <Heart className="size-4" />
+          <Heart className={cn("size-4", wished && "fill-accent")} />
+        </button>
+        <button
+          onClick={() => addToCart(product)}
+          className="absolute inset-x-3 bottom-3 flex translate-y-12 items-center justify-center gap-2 rounded-md bg-primary py-2 text-xs font-semibold text-primary-foreground opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
+        >
+          <ShoppingCart className="size-3.5" />
+          Add to Cart
         </button>
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">

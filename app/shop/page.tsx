@@ -1,24 +1,21 @@
-import Link from "next/link"
-import { ChevronRight } from "lucide-react"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
+import { Suspense } from "react"
+import type { Metadata } from "next"
+import { Breadcrumb, PageShell } from "@/components/page-shell"
 import { ShopBrowser } from "@/components/shop/shop-browser"
+
+export const metadata: Metadata = {
+  title: "Shop — FurniCraft",
+}
 
 export default function ShopPage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8">
-        <nav className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-accent">Home</Link>
-          <ChevronRight className="size-4" />
-          <Link href="/shop" className="hover:text-accent">Shop</Link>
-          <ChevronRight className="size-4" />
-          <span className="font-medium text-foreground">Sofas</span>
-        </nav>
+    <PageShell>
+      <div className="mb-6">
+        <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Shop", href: "/shop" }, { label: "Sofas" }]} />
+      </div>
+      <Suspense fallback={<div className="py-20 text-center text-muted-foreground">Loading products…</div>}>
         <ShopBrowser />
-      </main>
-      <SiteFooter />
-    </div>
+      </Suspense>
+    </PageShell>
   )
 }

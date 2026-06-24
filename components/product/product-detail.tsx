@@ -2,7 +2,9 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   Heart,
@@ -13,9 +15,12 @@ import {
 } from "lucide-react"
 import { type Product, formatPrice } from "@/lib/data"
 import { StarRating } from "@/components/star-rating"
+import { useStore } from "@/components/store-provider"
 import { cn } from "@/lib/utils"
 
 export function ProductDetail({ product }: { product: Product }) {
+  const router = useRouter()
+  const { addToCart, toggleWishlist, isInWishlist } = useStore()
   const gallery = [
     product.image,
     "/hero-living-room.png",
@@ -26,10 +31,23 @@ export function ProductDetail({ product }: { product: Product }) {
   const [active, setActive] = useState(0)
   const [color, setColor] = useState(product.colors[0])
   const [qty, setQty] = useState(1)
+  const [added, setAdded] = useState(false)
+  const wished = isInWishlist(product.id)
 
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : null
+
+  function handleAddToCart() {
+    addToCart(product, qty, color)
+    setAdded(true)
+    setTimeout(() => setAdded(false), 2000)
+  }
+
+  function handleBuyNow() {
+    addToCart(product, qty, color)
+    router.push("/checkout")
+  }
 
   return (
     <div className="grid gap-10 lg:grid-cols-2">
@@ -153,19 +171,28 @@ export function ProductDetail({ product }: { product: Product }) {
 
         {/* Actions */}
         <div className="mt-7 flex flex-wrap gap-3">
-          <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:flex-none sm:px-10">
-            <ShoppingCart className="size-4" />
-            Add to Cart
+          <button
+            onClick={handleAddToCart}
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:flex-none sm:px-10"
+          >
+            {added ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
+            {added ? "Added!" : "Add to Cart"}
           </button>
-          <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary sm:flex-none sm:px-10">
+          <button
+            onClick={handleBuyNow}
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary sm:flex-none sm:px-10"
+          >
             Buy Now
           </button>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-6 text-sm text-muted-foreground">
-          <button className="flex items-center gap-2 transition-colors hover:text-accent">
-            <Heart className="size-4" />
-            Add to Wishlist
+          <button
+            onClick={() => toggleWishlist(product)}
+            className={cn("flex items-center gap-2 transition-colors hover:text-accent", wished && "text-accent")}
+          >
+            <Heart className={cn("size-4", wished && "fill-accent")} />
+            {wished ? "In Wishlist" : "Add to Wishlist"}
           </button>
           <button className="flex items-center gap-2 transition-colors hover:text-accent">
             <Repeat className="size-4" />
