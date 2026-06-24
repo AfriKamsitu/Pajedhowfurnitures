@@ -1,16 +1,25 @@
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
+import { TrustBar } from "@/components/trust-bar"
+import { Hero } from "@/components/home/hero"
+import { ShopByCategory } from "@/components/home/shop-by-category"
+import { FeaturedProducts } from "@/components/home/featured-products"
+import { SaleBanner } from "@/components/home/sale-banner"
+
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center font-sans">
-      <main className="flex w-full max-w-3xl flex-col items-center gap-8 px-6 py-16 text-center sm:items-start sm:text-left">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-4xl font-bold tracking-tight">
-            Haruni Project
-          </h1>
-          <p className="max-w-md text-lg text-muted-foreground">
-            To get started, send a prompt or modify this page directly.
-          </p>
+    <div className="flex min-h-screen flex-col">
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8">
+        <Hero />
+        <TrustBar className="mt-6" />
+        <div className="mt-12 space-y-14">
+          <ShopByCategory />
+          <FeaturedProducts />
+          <SaleBanner />
         </div>
       </main>
+      <SiteFooter />
     </div>
-  );
+  )
 }
