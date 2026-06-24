@@ -166,5 +166,48 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  /* Brand-tuned, layered soft shadows for an elevated, premium feel */
+  .shadow-soft {
+    box-shadow:
+      0 1px 2px oklch(0.32 0.045 155 / 0.04),
+      0 4px 16px oklch(0.32 0.045 155 / 0.06);
+  }
+  .shadow-elevated {
+    box-shadow:
+      0 4px 12px oklch(0.32 0.045 155 / 0.08),
+      0 18px 40px -12px oklch(0.32 0.045 155 / 0.18);
+  }
+  .shadow-accent-glow {
+    box-shadow: 0 10px 30px -8px oklch(0.72 0.13 70 / 0.45);
+  }
+
+  /* Soft cream gradient surface used behind hero/feature sections */
+  .bg-surface-gradient {
+    background-image: radial-gradient(
+        80% 120% at 100% 0%,
+        oklch(0.95 0.04 80 / 0.5) 0%,
+        transparent 55%
+      ),
+      radial-gradient(70% 120% at 0% 100%, oklch(0.95 0.02 155 / 0.4) 0%, transparent 50%);
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

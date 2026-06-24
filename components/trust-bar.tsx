@@ -26,10 +26,13 @@ const items = [
 export function TrustBar({ className }: { className?: string }) {
   return (
     <div className={className}>
-      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border shadow-soft sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item) => (
-          <div key={item.title} className="flex items-center gap-3 bg-card px-5 py-4">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+          <div
+            key={item.title}
+            className="group flex items-center gap-3 bg-card px-5 py-4 transition-colors hover:bg-secondary/60"
+          >
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-primary ring-1 ring-border transition-all duration-300 group-hover:bg-accent group-hover:text-accent-foreground group-hover:ring-accent">
               <item.icon className="size-5" />
             </span>
             <div>
