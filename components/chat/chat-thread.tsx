@@ -1,20 +1,36 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Check, CheckCheck, ImageIcon, Package, Send, X } from "lucide-react"
+import {
+  Check,
+  CheckCheck,
+  FileText,
+  ImageIcon,
+  Package,
+  Send,
+  ShoppingBag,
+  Smile,
+  SmilePlus,
+  X,
+} from "lucide-react"
 import {
   SELLER_ID,
   formatChatTime,
+  quoteTotal,
   useChat,
   type ChatMessage,
+  type Conversation,
   type ProductRef,
+  type Quote,
 } from "@/components/chat-provider"
 import { products, formatPrice } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
-// Downscale an uploaded image to keep it small enough for local persistence.
+const EMOJIS = ["👍", "❤️", "😊", "🙏", "🔥", "👏", "😂", "🤝", "✅", "🛋️", "📦", "💰"]
+const REACTIONS = ["👍", "❤️", "😂", "🙏", "🔥", "👏"]
+
 function fileToResizedDataUrl(file: File, max = 720): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -48,56 +64,213 @@ function ReadReceipt({ message, otherId }: { message: ChatMessage; otherId: stri
   )
 }
 
-function MessageBubble({ message, mine, otherId }: { message: ChatMessage; mine: boolean; otherId: string }) {
+function QuoteCard({ message, mine }: { message: ChatMessage; mine: boolean }) {
+  const { identity, respondToQuote } = useChat()
+  const q = message.quote!
+  const gross = q.unitPrice * q.quantity
   return (
-    <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm",
-          mine
-            ? "rounded-br-md bg-primary text-primary-foreground"
-            : "rounded-bl-md bg-card text-foreground ring-1 ring-border",
-        )}
-      >
-        {message.type === "image" && message.imageUrl && (
-          <span className="mb-1 block overflow-hidden rounded-lg">
-            {/* user-shared photo, not a layout image */}
-            <img src={message.imageUrl || "/placeholder.svg"} alt="Shared photo" className="max-h-60 w-full object-cover" />
-          </span>
-        )}
-
-        {message.type === "product" && message.product && (
-          <Link
-            href={`/product/${message.product.id}`}
-            className={cn(
-              "mb-1 flex items-center gap-3 rounded-lg p-2 transition-colors",
-              mine ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" : "bg-secondary hover:bg-secondary/70",
-            )}
-          >
-            <span className="relative size-12 shrink-0 overflow-hidden rounded-md bg-background">
-              <Image src={message.product.image || "/placeholder.svg"} alt="" fill sizes="48px" className="object-cover" />
-            </span>
-            <span className="leading-tight">
-              <span className="block text-xs font-semibold">{message.product.name}</span>
-              <span className={cn("block text-xs", mine ? "text-primary-foreground/80" : "text-primary")}>
-                {formatPrice(message.product.price)}
-              </span>
-            </span>
-          </Link>
-        )}
-
-        {message.text && <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>}
-
+    <div className="w-64 max-w-full overflow-hidden rounded-xl bg-card text-foreground ring-1 ring-border">
+      <div className="flex items-center gap-2 bg-primary px-3 py-2 text-primary-foreground">
+        <FileText className="size-4" />
+        <span className="text-sm font-semibold">Quotation</span>
         <span
           className={cn(
-            "mt-1 flex items-center justify-end gap-1 text-[10px]",
-            mine ? "text-primary-foreground/70" : "text-muted-foreground",
+            "ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+            q.status === "accepted"
+              ? "bg-emerald-500 text-white"
+              : q.status === "revision"
+                ? "bg-amber-500 text-white"
+                : "bg-primary-foreground/20",
           )}
         >
-          {formatChatTime(message.createdAt)}
-          {mine && <ReadReceipt message={message} otherId={otherId} />}
+          {q.status}
         </span>
       </div>
+      <div className="space-y-1.5 px-3 py-2.5 text-xs">
+        <p className="text-sm font-semibold">{q.productName}</p>
+        <Row label={`Unit price × ${q.quantity}`} value={formatPrice(gross)} />
+        {q.discountPct > 0 && <Row label={`Discount (${q.discountPct}%)`} value={`- ${formatPrice(Math.round(gross * (q.discountPct / 100)))}`} />}
+        <Row label="Delivery fee" value={formatPrice(q.deliveryFee)} />
+        <Row label="Estimated delivery" value={`${q.etaDays} days`} />
+        <div className="my-1 border-t border-border" />
+        <Row label="Total" value={formatPrice(q.total)} strong />
+      </div>
+      {!mine && identity.role === "buyer" && q.status === "pending" && (
+        <div className="flex gap-2 border-t border-border p-2">
+          <button
+            onClick={() => respondToQuote(message.conversationId, message.id, "accepted")}
+            className="flex-1 rounded-md bg-primary px-2 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Accept Quote
+          </button>
+          <button
+            onClick={() => respondToQuote(message.conversationId, message.id, "revision")}
+            className="flex-1 rounded-md border border-border px-2 py-1.5 text-xs font-semibold hover:bg-secondary"
+          >
+            Request Revision
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function OrderCard({ message }: { message: ChatMessage }) {
+  const o = message.order!
+  return (
+    <div className="w-64 max-w-full overflow-hidden rounded-xl bg-card text-foreground ring-1 ring-border">
+      <div className="flex items-center gap-2 bg-emerald-600 px-3 py-2 text-white">
+        <ShoppingBag className="size-4" />
+        <span className="text-sm font-semibold">Order Created</span>
+      </div>
+      <div className="space-y-1.5 px-3 py-2.5 text-xs">
+        <p className="text-sm font-semibold">{o.productName}</p>
+        <Row label="Order ID" value={`#${o.orderId}`} />
+        <Row label="Quantity" value={String(o.quantity)} />
+        <Row label="Status" value={o.status} />
+        <div className="my-1 border-t border-border" />
+        <Row label="Total" value={formatPrice(o.total)} strong />
+      </div>
+      <div className="border-t border-border p-2">
+        <Link
+          href="/account/orders"
+          className="block rounded-md bg-primary px-2 py-1.5 text-center text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          View Order
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={cn(strong ? "text-sm font-bold text-primary" : "font-medium")}>{value}</span>
+    </div>
+  )
+}
+
+function ReactionRow({ message }: { message: ChatMessage }) {
+  const counts: Record<string, number> = {}
+  for (const e of Object.values(message.reactions ?? {})) counts[e] = (counts[e] ?? 0) + 1
+  const entries = Object.entries(counts)
+  if (entries.length === 0) return null
+  return (
+    <div className="mt-0.5 flex flex-wrap gap-1">
+      {entries.map(([emoji, count]) => (
+        <span key={emoji} className="rounded-full bg-card px-1.5 py-0.5 text-[11px] shadow-sm ring-1 ring-border">
+          {emoji} {count > 1 ? count : ""}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function MessageBubble({ message, mine, otherId }: { message: ChatMessage; mine: boolean; otherId: string }) {
+  const { toggleReaction } = useChat()
+  const [reactOpen, setReactOpen] = useState(false)
+
+  if (message.type === "system") {
+    return (
+      <div className="flex justify-center">
+        <span className="rounded-full bg-secondary px-3 py-1 text-center text-[11px] text-muted-foreground">
+          {message.text}
+        </span>
+      </div>
+    )
+  }
+
+  const isCard = message.type === "quote" || message.type === "order"
+
+  return (
+    <div className={cn("group flex flex-col", mine ? "items-end" : "items-start")}>
+      <div className={cn("flex items-end gap-1", mine ? "flex-row-reverse" : "flex-row")}>
+        {isCard ? (
+          message.type === "quote" ? (
+            <QuoteCard message={message} mine={mine} />
+          ) : (
+            <OrderCard message={message} />
+          )
+        ) : (
+          <div
+            className={cn(
+              "max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm",
+              mine
+                ? "rounded-br-md bg-primary text-primary-foreground"
+                : "rounded-bl-md bg-card text-foreground ring-1 ring-border",
+            )}
+          >
+            {message.type === "image" && message.imageUrl && (
+              <span className="mb-1 block overflow-hidden rounded-lg">
+                {/* user-shared photo */}
+                <img src={message.imageUrl || "/placeholder.svg"} alt="Shared photo" className="max-h-60 w-full object-cover" />
+              </span>
+            )}
+
+            {message.type === "product" && message.product && (
+              <Link
+                href={`/product/${message.product.id}`}
+                className={cn(
+                  "mb-1 flex items-center gap-3 rounded-lg p-2 transition-colors",
+                  mine ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" : "bg-secondary hover:bg-secondary/70",
+                )}
+              >
+                <span className="relative size-12 shrink-0 overflow-hidden rounded-md bg-background">
+                  <Image src={message.product.image || "/placeholder.svg"} alt="" fill sizes="48px" className="object-cover" />
+                </span>
+                <span className="leading-tight">
+                  <span className="block text-xs font-semibold">{message.product.name}</span>
+                  <span className={cn("block text-xs", mine ? "text-primary-foreground/80" : "text-primary")}>
+                    {formatPrice(message.product.price)}
+                  </span>
+                </span>
+              </Link>
+            )}
+
+            {message.text && <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>}
+
+            <span
+              className={cn(
+                "mt-1 flex items-center justify-end gap-1 text-[10px]",
+                mine ? "text-primary-foreground/70" : "text-muted-foreground",
+              )}
+            >
+              {formatChatTime(message.createdAt)}
+              {mine && <ReadReceipt message={message} otherId={otherId} />}
+            </span>
+          </div>
+        )}
+
+        {/* React button */}
+        <div className="relative">
+          <button
+            onClick={() => setReactOpen((v) => !v)}
+            className="flex size-6 items-center justify-center rounded-full text-muted-foreground opacity-0 transition-opacity hover:bg-secondary group-hover:opacity-100"
+            aria-label="React to message"
+          >
+            <SmilePlus className="size-3.5" />
+          </button>
+          {reactOpen && (
+            <div className={cn("absolute bottom-7 z-10 flex gap-0.5 rounded-full bg-card p-1 shadow-elevated ring-1 ring-border", mine ? "right-0" : "left-0")}>
+              {REACTIONS.map((e) => (
+                <button
+                  key={e}
+                  onClick={() => {
+                    toggleReaction(message.id, e)
+                    setReactOpen(false)
+                  }}
+                  className="rounded-full px-1 text-base transition-transform hover:scale-125"
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <ReactionRow message={message} />
     </div>
   )
 }
@@ -116,34 +289,139 @@ function TypingDots() {
   )
 }
 
+function SellerQuoteBuilder({
+  conversationId,
+  defaultProduct,
+  onClose,
+}: {
+  conversationId: string
+  defaultProduct?: ProductRef | null
+  onClose: () => void
+}) {
+  const { sendQuote } = useChat()
+  const [productId, setProductId] = useState(defaultProduct?.id ?? products[0].id)
+  const selected = products.find((p) => p.id === productId) ?? products[0]
+  const [quantity, setQuantity] = useState(1)
+  const [unitPrice, setUnitPrice] = useState(selected.price)
+  const [discountPct, setDiscountPct] = useState(0)
+  const [deliveryFee, setDeliveryFee] = useState(40000)
+  const [etaDays, setEtaDays] = useState(5)
+
+  function pick(id: string) {
+    setProductId(id)
+    const p = products.find((x) => x.id === id)
+    if (p) setUnitPrice(p.price)
+  }
+
+  const base: Omit<Quote, "status" | "total"> = {
+    productId,
+    productName: selected.name,
+    quantity,
+    unitPrice,
+    discountPct,
+    deliveryFee,
+    etaDays,
+  }
+  const total = quoteTotal(base)
+
+  return (
+    <div className="border-t border-border bg-card p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-xs font-semibold text-foreground">Create Quotation</span>
+        <button onClick={onClose} aria-label="Close quote builder">
+          <X className="size-4 text-muted-foreground" />
+        </button>
+      </div>
+      <div className="space-y-2">
+        <select
+          value={productId}
+          onChange={(e) => pick(e.target.value)}
+          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs"
+        >
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Qty" value={quantity} onChange={(v) => setQuantity(Math.max(1, v))} />
+          <Field label="Unit price" value={unitPrice} onChange={(v) => setUnitPrice(Math.max(0, v))} />
+          <Field label="Discount %" value={discountPct} onChange={(v) => setDiscountPct(Math.min(100, Math.max(0, v)))} />
+          <Field label="Delivery fee" value={deliveryFee} onChange={(v) => setDeliveryFee(Math.max(0, v))} />
+          <Field label="ETA (days)" value={etaDays} onChange={(v) => setEtaDays(Math.max(1, v))} />
+        </div>
+        <div className="flex items-center justify-between rounded-md bg-secondary px-3 py-2 text-xs">
+          <span className="text-muted-foreground">Total</span>
+          <span className="text-sm font-bold text-primary">{formatPrice(total)}</span>
+        </div>
+        <button
+          onClick={() => {
+            sendQuote(conversationId, base)
+            onClose()
+          }}
+          className="w-full rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          Send Quotation
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function Field({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  return (
+    <label className="block">
+      <span className="mb-0.5 block text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+      />
+    </label>
+  )
+}
+
 export function ChatThread({
   conversationId,
   className,
   presetProduct,
+  conversation,
 }: {
   conversationId: string
   className?: string
   presetProduct?: ProductRef | null
+  conversation?: Conversation | null
 }) {
-  const { identity, messagesFor, sendMessage, markConversationRead, signalTyping, typingNamesIn, isOnline } = useChat()
+  const {
+    identity,
+    messagesFor,
+    sendMessage,
+    createOrderFromChat,
+    markConversationRead,
+    signalTyping,
+    typingNamesIn,
+  } = useChat()
   const messages = messagesFor(conversationId)
   const [text, setText] = useState("")
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [emojiOpen, setEmojiOpen] = useState(false)
+  const [quoteOpen, setQuoteOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastTypingSent = useRef(0)
 
-  const buyerId = conversationId.replace(/^conv_/, "")
+  const buyerId = conversationId.replace(/^conv_/, "").split("__")[0]
   const otherId = identity.role === "buyer" ? SELLER_ID : buyerId
-  const otherOnline = isOnline(otherId)
   const typingNames = typingNamesIn(conversationId)
+  const isSeller = identity.role === "seller"
+  const convProduct = conversation?.product ?? presetProduct ?? null
 
-  // Mark incoming messages read whenever the thread is shown or updated.
   useEffect(() => {
     markConversationRead(conversationId)
   }, [conversationId, messages.length, markConversationRead])
 
-  // Auto-scroll to the newest message.
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
   }, [messages.length, typingNames.length])
@@ -162,6 +440,7 @@ export function ChatThread({
     if (!trimmed) return
     sendMessage(conversationId, { type: "text", text: trimmed })
     setText("")
+    setEmojiOpen(false)
   }
 
   async function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -181,19 +460,22 @@ export function ChatThread({
     setPickerOpen(false)
   }
 
-  const grouped = useMemo(() => messages, [messages])
+  function handleCreateOrder() {
+    if (!convProduct) return
+    const total = convProduct.price
+    createOrderFromChat(conversationId, { product: convProduct, quantity: 1, total })
+  }
 
   return (
     <div className={cn("flex flex-col bg-secondary/40", className)}>
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto px-4 py-4">
-        {grouped.length === 0 && (
+        {messages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
             <Package className="size-8 text-muted-foreground/50" />
-            <p>Start the conversation. Ask about products, delivery, or share a room photo.</p>
+            <p>Start the conversation. Ask about pricing, availability, delivery, or share a room photo.</p>
           </div>
         )}
-        {grouped.map((m) => (
+        {messages.map((m) => (
           <MessageBubble key={m.id} message={m} mine={m.senderId === identity.id} otherId={otherId} />
         ))}
         {typingNames.length > 0 && (
@@ -206,8 +488,31 @@ export function ChatThread({
         )}
       </div>
 
-      {/* Preset product chip (e.g. from a product page) */}
-      {presetProduct && (
+      {/* Seller action bar */}
+      {isSeller && (
+        <div className="flex flex-wrap gap-2 border-t border-border bg-card px-3 py-2">
+          <button
+            onClick={() => setQuoteOpen((v) => !v)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
+          >
+            <FileText className="size-3.5" /> Send Quote
+          </button>
+          <button
+            onClick={handleCreateOrder}
+            disabled={!convProduct}
+            className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-600/20 disabled:opacity-40"
+          >
+            <ShoppingBag className="size-3.5" /> Create Order
+          </button>
+        </div>
+      )}
+
+      {isSeller && quoteOpen && (
+        <SellerQuoteBuilder conversationId={conversationId} defaultProduct={convProduct} onClose={() => setQuoteOpen(false)} />
+      )}
+
+      {/* Preset product chip */}
+      {presetProduct && !isSeller && (
         <div className="border-t border-border bg-card px-3 py-2">
           <button
             onClick={() => shareProduct(presetProduct)}
@@ -248,8 +553,23 @@ export function ChatThread({
         </div>
       )}
 
+      {/* Emoji picker */}
+      {emojiOpen && (
+        <div className="flex flex-wrap gap-1 border-t border-border bg-card px-3 py-2">
+          {EMOJIS.map((e) => (
+            <button
+              key={e}
+              onClick={() => setText((t) => t + e)}
+              className="rounded-md px-1 text-xl transition-transform hover:scale-125"
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Composer */}
-      <div className="flex items-end gap-2 border-t border-border bg-card px-3 py-2.5">
+      <div className="flex items-end gap-1.5 border-t border-border bg-card px-3 py-2.5">
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
         <button
           onClick={() => fileRef.current?.click()}
@@ -267,6 +587,16 @@ export function ChatThread({
           aria-label="Share product"
         >
           <Package className="size-5" />
+        </button>
+        <button
+          onClick={() => setEmojiOpen((v) => !v)}
+          className={cn(
+            "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-secondary",
+            emojiOpen ? "text-primary" : "text-muted-foreground hover:text-foreground",
+          )}
+          aria-label="Insert emoji"
+        >
+          <Smile className="size-5" />
         </button>
         <textarea
           value={text}

@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Heart, ScanSearch, ShoppingCart, Star } from "lucide-react"
+import { FileText, Heart, MessageCircle, ScanSearch, Star } from "lucide-react"
 import { type Product, formatPrice } from "@/lib/data"
 import { useStore } from "@/components/store-provider"
+import { openChat } from "@/components/chat/chat-widget"
 import { cn } from "@/lib/utils"
 
 export function ProductCard({ product }: { product: Product }) {
-  const { addToCart, toggleWishlist, isInWishlist } = useStore()
+  const { toggleWishlist, isInWishlist } = useStore()
   const wished = isInWishlist(product.id)
 
   return (
@@ -74,13 +75,22 @@ export function ProductCard({ product }: { product: Product }) {
           <span className="truncate">{product.material}</span>
         </div>
 
-        <button
-          onClick={() => addToCart(product)}
-          className="mt-auto flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
-        >
-          <ShoppingCart className="size-3.5" />
-          Add to Cart
-        </button>
+        <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
+          <button
+            onClick={() => openChat({ id: product.id, name: product.name, price: product.price, image: product.image })}
+            className="flex items-center justify-center gap-1.5 rounded-lg bg-primary py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <MessageCircle className="size-3.5" />
+            Chat
+          </button>
+          <Link
+            href={`/quote/${product.id}`}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card py-2 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+          >
+            <FileText className="size-3.5" />
+            Quote
+          </Link>
+        </div>
       </div>
     </div>
   )

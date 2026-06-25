@@ -162,6 +162,79 @@ export const featuredProducts = products.filter((p) =>
   ["modern-l-shaped-sofa", "king-size-upholstered-bed", "6-seater-dining-set", "wooden-coffee-table"].includes(p.id),
 )
 
+// ---------------------------------------------------------------------------
+// Marketplace metadata (supplier, stock, MOQ, warranty, delivery, specs)
+// ---------------------------------------------------------------------------
+
+export type Supplier = {
+  id: string
+  name: string
+  location: string
+  country: string
+  rating: number
+  responseTime: string
+  verified: boolean
+}
+
+export const suppliers: Supplier[] = [
+  { id: "pajedhow-furnishings", name: "Pajedhow Furnishings Ltd", location: "Dar es Salaam", country: "Tanzania", rating: 4.8, responseTime: "≤ 2 hours", verified: true },
+  { id: "kilimanjaro-woodworks", name: "Kilimanjaro Woodworks", location: "Arusha", country: "Tanzania", rating: 4.6, responseTime: "≤ 4 hours", verified: true },
+  { id: "zanzibar-interiors", name: "Zanzibar Interiors Co.", location: "Zanzibar", country: "Tanzania", rating: 4.7, responseTime: "≤ 3 hours", verified: true },
+]
+
+export type ProductMeta = {
+  supplier: Supplier
+  stock: number
+  inStock: boolean
+  moq: number
+  warrantyMonths: number
+  deliveryDays: number
+  sku: string
+  specs: { label: string; value: string }[]
+}
+
+function hashId(id: string) {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  return h
+}
+
+export function getProductMeta(product: Product): ProductMeta {
+  const h = hashId(product.id)
+  const supplier = suppliers[h % suppliers.length]
+  const stock = 4 + (h % 40)
+  const moq = 1 + (h % 3)
+  const warrantyMonths = [12, 18, 24, 36][h % 4]
+  const deliveryDays = 3 + (h % 6)
+  const dims = ["220 × 95 × 85 cm", "180 × 80 × 75 cm", "200 × 100 × 90 cm", "160 × 90 × 80 cm"][h % 4]
+  const weight = `${25 + (h % 40)} kg`
+  return {
+    supplier,
+    stock,
+    inStock: stock > 0,
+    moq,
+    warrantyMonths,
+    deliveryDays,
+    sku: `PJD-${product.id.slice(0, 4).toUpperCase()}-${(h % 900) + 100}`,
+    specs: [
+      { label: "Material", value: product.material },
+      { label: "Dimensions", value: dims },
+      { label: "Weight", value: weight },
+      { label: "Frame", value: "Solid hardwood" },
+      { label: "Assembly", value: "Includes assembly on delivery" },
+      { label: "Origin", value: `${supplier.location}, ${supplier.country}` },
+    ],
+  }
+}
+
+export function getRelatedProducts(product: Product, limit = 4) {
+  return products
+    .filter((p) => p.id !== product.id && p.category === product.category)
+    .slice(0, limit)
+    .concat(products.filter((p) => p.id !== product.id && p.category !== product.category))
+    .slice(0, limit)
+}
+
 export function getProductById(id: string) {
   return products.find((p) => p.id === id)
 }

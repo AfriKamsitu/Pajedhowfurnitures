@@ -6,11 +6,10 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth, addOrderForUser, type Order } from "@/components/auth-provider"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -18,13 +17,33 @@ import { useAuth } from "@/components/auth-provider"
 
 export type ChatRole = "buyer" | "seller"
 
-export type MessageType = "text" | "image" | "product"
+export type MessageType = "text" | "image" | "product" | "quote" | "order" | "system"
 
 export type ProductRef = {
   id: string
   name: string
   price: number
   image: string
+}
+
+export type Quote = {
+  productId?: string
+  productName: string
+  quantity: number
+  unitPrice: number
+  discountPct: number
+  deliveryFee: number
+  etaDays: number
+  total: number
+  status: "pending" | "accepted" | "revision"
+}
+
+export type OrderRef = {
+  orderId: string
+  productName: string
+  quantity: number
+  total: number
+  status: string
 }
 
 export type ChatMessage = {
@@ -37,6 +56,9 @@ export type ChatMessage = {
   text?: string
   imageUrl?: string
   product?: ProductRef
+  quote?: Quote
+  order?: OrderRef
+  reactions?: Record<string, string>
   createdAt: number
   readBy: string[]
 }
@@ -45,6 +67,11 @@ export type Conversation = {
   id: string
   buyerId: string
   buyerName: string
+  product?: ProductRef
+  supplier?: string
+  pinned?: boolean
+  archived?: boolean
+  status?: "open" | "resolved"
   createdAt: number
   lastMessageAt: number
 }
@@ -59,8 +86,6 @@ export type ChatIdentity = {
 // Constants + storage helpers
 // ---------------------------------------------------------------------------
 
-// All buyers talk to a single store seller. Every admin shares this identity so
-// read receipts and presence resolve to the same participant.
 export const SELLER_ID = "store-seller"
 export const SELLER_NAME = "pajedhowfurnitures Support"
 
@@ -71,8 +96,8 @@ const TYPING_KEY = "pajedhow.chat.typing"
 const GUEST_KEY = "pajedhow.chat.guest"
 const CHANNEL = "pajedhow-chat"
 
-const ONLINE_WINDOW = 12_000 // ms a heartbeat stays "online"
-const TYPING_WINDOW = 4_000 // ms a typing signal stays active
+const ONLINE_WINDOW = 12_000
+const TYPING_WINDOW = 4_000
 
 function readJSON<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback
@@ -89,28 +114,60 @@ function writeJSON(key: string, value: unknown) {
   window.localStorage.setItem(key, JSON.stringify(value))
 }
 
-function conversationIdFor(buyerId: string) {
-  return `conv_${buyerId}`
+// General support thread: conv_<buyerId>. Product thread: conv_<buyerId>__<productId>.
+function conversationIdFor(buyerId: string, productId?: string) {
+  return productId ? `conv_${buyerId}__${productId}` : `conv_${buyerId}`
+}
+
+function buyerIdFromConversation(conversationId: string) {
+  return conversationId.replace(/^conv_/, "").split("__")[0]
+}
+
+export function quoteTotal(q: Omit<Quote, "total" | "status">) {
+  const gross = q.unitPrice * q.quantity
+  const discounted = gross * (1 - q.discountPct / 100)
+  return Math.round(discounted + q.deliveryFee)
 }
 
 // ---------------------------------------------------------------------------
 // Context
 // ---------------------------------------------------------------------------
 
+type EnsureOpts = { product?: ProductRef; supplier?: string }
+
 type ChatContextValue = {
   identity: ChatIdentity
   conversations: Conversation[]
+  myConversations: Conversation[]
   messagesFor: (conversationId: string) => ChatMessage[]
   myConversationId: string
   ensureMyConversation: () => string
+  ensureConversation: (opts?: EnsureOpts) => string
+  conversationById: (id: string) => Conversation | undefined
   sendMessage: (
     conversationId: string,
-    payload: { type?: MessageType; text?: string; imageUrl?: string; product?: ProductRef },
+    payload: {
+      type?: MessageType
+      text?: string
+      imageUrl?: string
+      product?: ProductRef
+      quote?: Quote
+      order?: OrderRef
+    },
   ) => void
+  sendQuote: (conversationId: string, quote: Omit<Quote, "status">) => void
+  respondToQuote: (conversationId: string, messageId: string, decision: "accepted" | "revision") => void
+  createOrderFromChat: (
+    conversationId: string,
+    payload: { product: ProductRef; quantity: number; total: number },
+  ) => string
+  toggleReaction: (messageId: string, emoji: string) => void
+  setConversationFlags: (conversationId: string, flags: Partial<Pick<Conversation, "pinned" | "archived" | "status">>) => void
   markConversationRead: (conversationId: string) => void
   signalTyping: (conversationId: string) => void
   typingNamesIn: (conversationId: string) => string[]
   isOnline: (participantId: string) => boolean
+  lastSeen: (participantId: string) => number | null
   unreadFor: (conversationId: string) => number
   totalUnread: number
 }
@@ -127,7 +184,6 @@ function getChannel() {
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
 
-  // Resolve the current chat identity from the auth user (or a persisted guest).
   const identity = useMemo<ChatIdentity>(() => {
     if (user?.role === "admin") {
       return { id: SELLER_ID, name: user.name || SELLER_NAME, role: "seller" }
@@ -159,7 +215,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     getChannel()?.postMessage("changed")
   }, [])
 
-  // Initial load + cross-tab sync (BroadcastChannel and storage events).
   useEffect(() => {
     reload()
     const ch = getChannel()
@@ -175,14 +230,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [reload])
 
-  // Heartbeat for presence + periodic clock tick for online/typing expiry.
   useEffect(() => {
     function beat() {
       const presence = readJSON<Record<string, number>>(PRESENCE_KEY, {})
       presence[identity.id] = Date.now()
       writeJSON(PRESENCE_KEY, presence)
       setNow(Date.now())
-      // Poll fallback so messages still refresh if a cross-tab event is missed.
       reload()
     }
     beat()
@@ -192,46 +245,71 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const myConversationId = useMemo(() => conversationIdFor(identity.id), [identity.id])
 
-  const ensureMyConversation = useCallback(() => {
-    if (identity.role !== "buyer") return ""
-    const id = conversationIdFor(identity.id)
-    const existing = readJSON<Conversation[]>(CONV_KEY, [])
-    if (!existing.some((c) => c.id === id)) {
-      const conv: Conversation = {
-        id,
-        buyerId: identity.id,
-        buyerName: identity.name,
-        createdAt: Date.now(),
-        lastMessageAt: Date.now(),
+  const ensureConversation = useCallback<ChatContextValue["ensureConversation"]>(
+    (opts) => {
+      if (identity.role !== "buyer") return ""
+      const id = conversationIdFor(identity.id, opts?.product?.id)
+      const existing = readJSON<Conversation[]>(CONV_KEY, [])
+      const found = existing.find((c) => c.id === id)
+      if (!found) {
+        const conv: Conversation = {
+          id,
+          buyerId: identity.id,
+          buyerName: identity.name,
+          product: opts?.product,
+          supplier: opts?.supplier,
+          status: "open",
+          createdAt: Date.now(),
+          lastMessageAt: Date.now(),
+        }
+        writeJSON(CONV_KEY, [...existing, conv])
+        reload()
+        broadcast()
+      } else if (opts?.product && !found.product) {
+        writeJSON(
+          CONV_KEY,
+          existing.map((c) => (c.id === id ? { ...c, product: opts.product, supplier: opts.supplier } : c)),
+        )
+        reload()
+        broadcast()
       }
-      writeJSON(CONV_KEY, [...existing, conv])
-      reload()
-      broadcast()
-    }
-    return id
-  }, [identity, reload, broadcast])
+      return id
+    },
+    [identity, reload, broadcast],
+  )
 
-  const sendMessage = useCallback<ChatContextValue["sendMessage"]>(
-    (conversationId, payload) => {
+  const ensureMyConversation = useCallback(() => ensureConversation(), [ensureConversation])
+
+  const appendMessage = useCallback(
+    (message: ChatMessage, ensureConv?: Partial<Conversation>) => {
       const allMsgs = readJSON<ChatMessage[]>(MSG_KEY, [])
-      const allConvs = readJSON<Conversation[]>(CONV_KEY, [])
-
-      // Ensure the conversation exists (buyer may message before it's created).
-      let convs = allConvs
-      if (!convs.some((c) => c.id === conversationId)) {
-        const buyerId = conversationId.replace(/^conv_/, "")
+      let convs = readJSON<Conversation[]>(CONV_KEY, [])
+      if (!convs.some((c) => c.id === message.conversationId)) {
         convs = [
           ...convs,
           {
-            id: conversationId,
-            buyerId,
+            id: message.conversationId,
+            buyerId: buyerIdFromConversation(message.conversationId),
             buyerName: identity.role === "buyer" ? identity.name : "Customer",
+            status: "open",
             createdAt: Date.now(),
-            lastMessageAt: Date.now(),
+            lastMessageAt: message.createdAt,
+            ...ensureConv,
           },
         ]
       }
+      convs = convs.map((c) => (c.id === message.conversationId ? { ...c, lastMessageAt: message.createdAt } : c))
+      writeJSON(MSG_KEY, [...allMsgs, message])
+      writeJSON(CONV_KEY, convs)
+      reload()
+      broadcast()
+    },
+    [identity, reload, broadcast],
+  )
 
+  const sendMessage = useCallback<ChatContextValue["sendMessage"]>(
+    (conversationId, payload) => {
+      const priorMsgs = readJSON<ChatMessage[]>(MSG_KEY, [])
       const message: ChatMessage = {
         id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         conversationId,
@@ -242,28 +320,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         text: payload.text,
         imageUrl: payload.imageUrl,
         product: payload.product,
+        quote: payload.quote,
+        order: payload.order,
         createdAt: Date.now(),
         readBy: [identity.id],
       }
+      appendMessage(message)
 
-      convs = convs.map((c) => (c.id === conversationId ? { ...c, lastMessageAt: message.createdAt } : c))
-
-      writeJSON(MSG_KEY, [...allMsgs, message])
-      writeJSON(CONV_KEY, convs)
-      reload()
-      broadcast()
-
-      // Friendly auto-greeting from the store on the very first buyer message
-      // when no seller is currently online, so the chat feels responsive.
+      // Auto-greeting from the store on the buyer's first message when the
+      // seller is offline, so the chat always feels responsive.
       if (identity.role === "buyer") {
-        const priorBuyerMsgs = allMsgs.filter(
+        const priorBuyerMsgs = priorMsgs.filter(
           (m) => m.conversationId === conversationId && m.senderRole === "buyer",
         )
         const presence = readJSON<Record<string, number>>(PRESENCE_KEY, {})
         const sellerOnline = presence[SELLER_ID] && Date.now() - presence[SELLER_ID] < ONLINE_WINDOW
         if (priorBuyerMsgs.length === 0 && !sellerOnline) {
           setTimeout(() => {
-            const msgs2 = readJSON<ChatMessage[]>(MSG_KEY, [])
             const auto: ChatMessage = {
               id: `m_${Date.now()}_auto`,
               conversationId,
@@ -271,22 +344,121 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               senderName: SELLER_NAME,
               senderRole: "seller",
               type: "text",
-              text: "Thanks for reaching out to pajedhowfurnitures! A team member will be with you shortly. How can we help with your order or product questions?",
+              text: "Thanks for reaching out to pajedhowfurnitures! A specialist will be with you shortly to discuss pricing, availability and delivery.",
               createdAt: Date.now(),
               readBy: [SELLER_ID],
             }
-            const convs2 = readJSON<Conversation[]>(CONV_KEY, []).map((c) =>
-              c.id === conversationId ? { ...c, lastMessageAt: auto.createdAt } : c,
-            )
-            writeJSON(MSG_KEY, [...msgs2, auto])
-            writeJSON(CONV_KEY, convs2)
-            reload()
-            broadcast()
+            appendMessage(auto)
           }, 1400)
         }
       }
     },
-    [identity, reload, broadcast],
+    [identity, appendMessage],
+  )
+
+  const sendQuote = useCallback<ChatContextValue["sendQuote"]>(
+    (conversationId, quote) => {
+      const message: ChatMessage = {
+        id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        conversationId,
+        senderId: identity.id,
+        senderName: identity.name,
+        senderRole: identity.role,
+        type: "quote",
+        quote: { ...quote, status: "pending" },
+        createdAt: Date.now(),
+        readBy: [identity.id],
+      }
+      appendMessage(message)
+    },
+    [identity, appendMessage],
+  )
+
+  const respondToQuote = useCallback<ChatContextValue["respondToQuote"]>(
+    (conversationId, messageId, decision) => {
+      const allMsgs = readJSON<ChatMessage[]>(MSG_KEY, [])
+      const updated = allMsgs.map((m) =>
+        m.id === messageId && m.quote ? { ...m, quote: { ...m.quote, status: decision } } : m,
+      )
+      writeJSON(MSG_KEY, updated)
+      reload()
+      broadcast()
+      const system: ChatMessage = {
+        id: `m_${Date.now()}_sys`,
+        conversationId,
+        senderId: identity.id,
+        senderName: identity.name,
+        senderRole: identity.role,
+        type: "system",
+        text:
+          decision === "accepted"
+            ? `${identity.name} accepted the quotation. The seller can now create the order.`
+            : `${identity.name} requested a revision to the quotation.`,
+        createdAt: Date.now() + 1,
+        readBy: [identity.id],
+      }
+      appendMessage(system)
+    },
+    [identity, reload, broadcast, appendMessage],
+  )
+
+  const createOrderFromChat = useCallback<ChatContextValue["createOrderFromChat"]>(
+    (conversationId, { product, quantity, total }) => {
+      const buyerId = buyerIdFromConversation(conversationId)
+      const orderId = `FH${Math.floor(10000 + Math.random() * 89999)}`
+      const order: Order = {
+        id: orderId,
+        date: new Date().toISOString(),
+        status: "Processing",
+        total,
+        items: [{ name: product.name, image: product.image, quantity, price: product.price }],
+      }
+      addOrderForUser(buyerId, order)
+      const message: ChatMessage = {
+        id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        conversationId,
+        senderId: identity.id,
+        senderName: identity.name,
+        senderRole: identity.role,
+        type: "order",
+        order: { orderId, productName: product.name, quantity, total, status: "Processing" },
+        createdAt: Date.now(),
+        readBy: [identity.id],
+      }
+      appendMessage(message)
+      return orderId
+    },
+    [identity, appendMessage],
+  )
+
+  const toggleReaction = useCallback<ChatContextValue["toggleReaction"]>(
+    (messageId, emoji) => {
+      const allMsgs = readJSON<ChatMessage[]>(MSG_KEY, [])
+      const updated = allMsgs.map((m) => {
+        if (m.id !== messageId) return m
+        const reactions = { ...(m.reactions ?? {}) }
+        if (reactions[identity.id] === emoji) delete reactions[identity.id]
+        else reactions[identity.id] = emoji
+        return { ...m, reactions }
+      })
+      writeJSON(MSG_KEY, updated)
+      reload()
+      broadcast()
+    },
+    [identity.id, reload, broadcast],
+  )
+
+  const setConversationFlags = useCallback<ChatContextValue["setConversationFlags"]>(
+    (conversationId, flags) => {
+      const convs = readJSON<Conversation[]>(CONV_KEY, [])
+      writeJSON(
+        CONV_KEY,
+        convs.map((c) => (c.id === conversationId ? { ...c, ...flags } : c)),
+      )
+      reload()
+      broadcast()
+    },
+    [reload, broadcast],
   )
 
   const markConversationRead = useCallback<ChatContextValue["markConversationRead"]>(
@@ -343,12 +515,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [now],
   )
 
+  const lastSeen = useCallback<ChatContextValue["lastSeen"]>((participantId) => {
+    const presence = readJSON<Record<string, number>>(PRESENCE_KEY, {})
+    return presence[participantId] ?? null
+  }, [])
+
   const messagesFor = useCallback<ChatContextValue["messagesFor"]>(
     (conversationId) =>
-      messages
-        .filter((m) => m.conversationId === conversationId)
-        .sort((a, b) => a.createdAt - b.createdAt),
+      messages.filter((m) => m.conversationId === conversationId).sort((a, b) => a.createdAt - b.createdAt),
     [messages],
+  )
+
+  const conversationById = useCallback<ChatContextValue["conversationById"]>(
+    (id) => conversations.find((c) => c.id === id),
+    [conversations],
   )
 
   const unreadFor = useCallback<ChatContextValue["unreadFor"]>(
@@ -364,41 +544,71 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       return messages.filter((m) => m.senderRole === "buyer" && !m.readBy.includes(identity.id)).length
     }
     return messages.filter(
-      (m) => m.conversationId === myConversationId && m.senderId !== identity.id && !m.readBy.includes(identity.id),
+      (m) =>
+        buyerIdFromConversation(m.conversationId) === identity.id &&
+        m.senderId !== identity.id &&
+        !m.readBy.includes(identity.id),
     ).length
-  }, [messages, identity, myConversationId])
+  }, [messages, identity])
 
   const sortedConversations = useMemo(
-    () => [...conversations].sort((a, b) => b.lastMessageAt - a.lastMessageAt),
+    () =>
+      [...conversations].sort((a, b) => {
+        if (!!b.pinned !== !!a.pinned) return b.pinned ? 1 : -1
+        return b.lastMessageAt - a.lastMessageAt
+      }),
     [conversations],
+  )
+
+  const myConversations = useMemo(
+    () => sortedConversations.filter((c) => c.buyerId === identity.id),
+    [sortedConversations, identity.id],
   )
 
   const value = useMemo<ChatContextValue>(
     () => ({
       identity,
       conversations: sortedConversations,
+      myConversations,
       messagesFor,
       myConversationId,
       ensureMyConversation,
+      ensureConversation,
+      conversationById,
       sendMessage,
+      sendQuote,
+      respondToQuote,
+      createOrderFromChat,
+      toggleReaction,
+      setConversationFlags,
       markConversationRead,
       signalTyping,
       typingNamesIn,
       isOnline,
+      lastSeen,
       unreadFor,
       totalUnread,
     }),
     [
       identity,
       sortedConversations,
+      myConversations,
       messagesFor,
       myConversationId,
       ensureMyConversation,
+      ensureConversation,
+      conversationById,
       sendMessage,
+      sendQuote,
+      respondToQuote,
+      createOrderFromChat,
+      toggleReaction,
+      setConversationFlags,
       markConversationRead,
       signalTyping,
       typingNamesIn,
       isOnline,
+      lastSeen,
       unreadFor,
       totalUnread,
     ],
@@ -415,4 +625,13 @@ export function useChat() {
 
 export function formatChatTime(ts: number) {
   return new Date(ts).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+}
+
+export function formatLastSeen(ts: number | null) {
+  if (!ts) return "Offline"
+  const diff = Date.now() - ts
+  if (diff < 60_000) return "Last seen just now"
+  if (diff < 3_600_000) return `Last seen ${Math.floor(diff / 60_000)}m ago`
+  if (diff < 86_400_000) return `Last seen ${Math.floor(diff / 3_600_000)}h ago`
+  return `Last seen ${new Date(ts).toLocaleDateString()}`
 }

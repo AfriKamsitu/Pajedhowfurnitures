@@ -93,6 +93,19 @@ function publicUser(u: StoredUser): User {
   return rest
 }
 
+// Append an order to a specific user's account (used when the seller creates an
+// order from chat for a buyer who is not the current session user). Safe no-op
+// for guest buyers that don't have a stored account.
+export function addOrderForUser(userId: string, order: Order) {
+  if (typeof window === "undefined") return false
+  const users = readUsers()
+  const idx = users.findIndex((u) => u.id === userId)
+  if (idx === -1) return false
+  users[idx] = { ...users[idx], orders: [order, ...(users[idx].orders ?? [])] }
+  writeUsers(users)
+  return true
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
