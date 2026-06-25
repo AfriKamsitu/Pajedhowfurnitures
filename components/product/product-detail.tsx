@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Heart,
+  MessageCircle,
   Minus,
   Plus,
   Repeat,
@@ -16,6 +17,7 @@ import {
 import { type Product, formatPrice } from "@/lib/data"
 import { StarRating } from "@/components/star-rating"
 import { useStore } from "@/components/store-provider"
+import { openChat } from "@/components/chat/chat-widget"
 import { cn } from "@/lib/utils"
 
 export function ProductDetail({ product }: { product: Product }) {
@@ -183,6 +185,15 @@ export function ProductDetail({ product }: { product: Product }) {
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary sm:flex-none sm:px-10"
           >
             Buy Now
+          </button>
+          <button
+            onClick={() =>
+              openChat({ id: product.id, name: product.name, price: product.price, image: product.image })
+            }
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-6 py-3 text-sm font-semibold text-accent transition-colors hover:bg-accent/20"
+          >
+            <MessageCircle className="size-4" />
+            Chat about this
           </button>
         </div>
 

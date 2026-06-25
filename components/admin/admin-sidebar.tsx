@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   LogOut,
+  MessageSquare,
   ShieldCheck,
   ShoppingCart,
   Star,
@@ -23,12 +24,14 @@ import {
   X,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { useChat } from "@/components/chat-provider"
 import { cn } from "@/lib/utils"
 
 const mainNav = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
+  { label: "Messages", href: "/admin/messages", icon: MessageSquare },
   { label: "Products", href: "/admin/products", icon: Box },
   { label: "Categories", href: "/admin/categories", icon: LayoutGrid },
   { label: "Customers", href: "/admin/customers", icon: Users },
@@ -48,10 +51,12 @@ function NavLink({
   item,
   active,
   onNavigate,
+  badge = 0,
 }: {
   item: { label: string; href: string; icon: React.ElementType }
   active: boolean
   onNavigate?: () => void
+  badge?: number
 }) {
   const Icon = item.icon
   return (
@@ -66,7 +71,17 @@ function NavLink({
       )}
     >
       <Icon className="size-[18px]" />
-      {item.label}
+      <span className="flex-1">{item.label}</span>
+      {badge > 0 && (
+        <span
+          className={cn(
+            "flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold",
+            active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-accent text-accent-foreground",
+          )}
+        >
+          {badge}
+        </span>
+      )}
     </Link>
   )
 }
@@ -81,6 +96,7 @@ export function AdminSidebar({
   const pathname = usePathname()
   const router = useRouter()
   const { user, signOut } = useAuth()
+  const { totalUnread } = useChat()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const isActive = (href: string) =>
@@ -134,7 +150,13 @@ export function AdminSidebar({
             <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Main</p>
             <div className="space-y-1">
               {mainNav.map((item) => (
-                <NavLink key={item.href} item={item} active={isActive(item.href)} onNavigate={onClose} />
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  active={isActive(item.href)}
+                  onNavigate={onClose}
+                  badge={item.href === "/admin/messages" ? totalUnread : 0}
+                />
               ))}
             </div>
           </div>
