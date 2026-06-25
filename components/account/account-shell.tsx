@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, Loader2, LogOut, MapPin, Package, ShieldCheck, User as UserIcon } from "lucide-react"
+import { FileText, LayoutDashboard, Loader2, LogOut, MapPin, Package, ShieldCheck, User as UserIcon } from "lucide-react"
 import { PageShell, Breadcrumb } from "@/components/page-shell"
 import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { label: "Dashboard", href: "/account", icon: LayoutDashboard },
   { label: "My Orders", href: "/account/orders", icon: Package },
+  { label: "My Quotes", href: "/account/quotes", icon: FileText },
   { label: "Addresses", href: "/account/addresses", icon: MapPin },
   { label: "Profile", href: "/account/profile", icon: UserIcon },
 ]

@@ -160,14 +160,15 @@ export function QuoteForm({ product }: { product: Product }) {
         :global(.input) {
           width: 100%;
           border-radius: 0.375rem;
-          border: 1px solid hsl(var(--border));
-          background: hsl(var(--background));
+          border: 1px solid var(--border);
+          background: var(--background);
+          color: var(--foreground);
           padding: 0.5rem 0.75rem;
           font-size: 0.875rem;
           outline: none;
         }
         :global(.input:focus) {
-          border-color: hsl(var(--primary));
+          border-color: var(--primary);
         }
       `}</style>
     </div>
