@@ -51,6 +51,11 @@ function roleForEmail(email: string): Role {
 
 type StoredUser = User & { password: string }
 
+// Demo accounts seeded on first load so the credentials shown on the login
+// page work out of the box. Swap these out once a real backend is connected.
+export const DEMO_ADMIN = { email: "admin@pajedhow.com", password: "admin1234" }
+export const DEMO_CUSTOMER = { email: "buyer@pajedhow.com", password: "buyer1234" }
+
 type AuthContextValue = {
   user: User | null
   loading: boolean
@@ -92,8 +97,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Restore session on mount.
+  // Seed demo accounts (admin + customer) once, then restore session.
   useEffect(() => {
+    const users = readUsers()
+    const seeds: { name: string; creds: { email: string; password: string } }[] = [
+      { name: "Store Owner", creds: DEMO_ADMIN },
+      { name: "Demo Buyer", creds: DEMO_CUSTOMER },
+    ]
+    let changed = false
+    for (const { name, creds } of seeds) {
+      const existing = users.find((u) => u.email.toLowerCase() === creds.email)
+      if (!existing) {
+        users.push({
+          id: crypto.randomUUID(),
+          name,
+          email: creds.email,
+          password: creds.password,
+          role: roleForEmail(creds.email),
+          createdAt: new Date().toISOString(),
+          addresses: [],
+          orders: [],
+        })
+        changed = true
+      } else if (existing.password !== creds.password || existing.role !== roleForEmail(creds.email)) {
+        // Keep the demo accounts in sync with the credentials shown on the login page.
+        existing.password = creds.password
+        existing.role = roleForEmail(creds.email)
+        changed = true
+      }
+    }
+    if (changed) writeUsers(users)
+
     const sessionId = window.localStorage.getItem(SESSION_KEY)
     if (sessionId) {
       const found = readUsers().find((u) => u.id === sessionId)
