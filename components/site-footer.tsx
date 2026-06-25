@@ -45,7 +45,7 @@ export function SiteFooter() {
                 <Sofa className="size-5" />
               </span>
               <span className="leading-tight">
-                <span className="block text-lg font-bold">FurniCraft</span>
+                <span className="block text-lg font-bold">pajedhowfurnitures</span>
                 <span className="block text-[11px] text-primary-foreground/70">Elevate Your Space</span>
               </span>
             </Link>
@@ -87,7 +87,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-primary-foreground/15 pt-6 text-sm text-primary-foreground/60 sm:flex-row">
-          <p>© 2026 FurniCraft. All rights reserved.</p>
+          <p>© 2026 pajedhowfurnitures. All rights reserved.</p>
           <div className="flex gap-5">
             <a href="#" className="hover:text-accent">Privacy Policy</a>
             <a href="#" className="hover:text-accent">Terms of Service</a>

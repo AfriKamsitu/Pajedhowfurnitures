@@ -4,14 +4,14 @@ import { Breadcrumb, PageShell } from "@/components/page-shell"
 import { ContactForm } from "@/components/contact/contact-form"
 
 export const metadata: Metadata = {
-  title: "Contact Us — FurniCraft",
-  description: "Get in touch with the FurniCraft team for support, orders, and showroom visits.",
+  title: "Contact Us — pajedhowfurnitures",
+  description: "Get in touch with the pajedhowfurnitures team for support, orders, and showroom visits.",
 }
 
 const info = [
   { icon: MapPin, title: "Visit Us", lines: ["123 Furniture Avenue", "Dar es Salaam, Tanzania"] },
   { icon: Phone, title: "Call Us", lines: ["+255 700 000 000", "Mon–Sat, 8am – 7pm"] },
-  { icon: Mail, title: "Email Us", lines: ["support@furnicraft.com", "sales@furnicraft.com"] },
+  { icon: Mail, title: "Email Us", lines: ["support@pajedhowfurnitures.com", "sales@pajedhowfurnitures.com"] },
   { icon: Clock, title: "Working Hours", lines: ["Mon–Sat: 8am – 7pm", "Sunday: 10am – 4pm"] },
 ]
 

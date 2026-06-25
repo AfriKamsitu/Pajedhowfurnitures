@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import { StoreProvider } from '@/components/store-provider'
+import { AuthProvider } from '@/components/auth-provider'
 import './globals.css'
 
 const inter = Inter({
@@ -17,7 +18,7 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: 'FurniCraft — Elevate Your Space',
+  title: 'pajedhowfurnitures — Elevate Your Space',
   description:
     'Discover a wide range of stylish and quality furniture for every room. Sofas, beds, dining sets, chairs and more.',
   generator: 'v0.app',
@@ -56,7 +57,9 @@ export default function RootLayout({
       className={`light ${inter.variable} ${poppins.variable} bg-background`}
     >
       <body className="font-sans antialiased">
-        <StoreProvider>{children}</StoreProvider>
+        <AuthProvider>
+          <StoreProvider>{children}</StoreProvider>
+        </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

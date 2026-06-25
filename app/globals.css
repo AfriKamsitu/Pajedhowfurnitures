@@ -50,7 +50,7 @@
 
 :root {
   color-scheme: light;
-  /* FurniCraft brand theme: forest green + gold accent */
+  /* pajedhowfurnitures brand theme: forest green + gold accent */
   --background: oklch(0.985 0.004 95);
   --foreground: oklch(0.22 0.015 150);
   --card: oklch(1 0 0);

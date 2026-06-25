@@ -31,7 +31,7 @@ export function AuthShell({
               <Sofa className="size-5" />
             </span>
             <span className="leading-tight">
-              <span className="block text-lg font-bold">FurniCraft</span>
+              <span className="block text-lg font-bold">pajedhowfurnitures</span>
               <span className="block text-[11px] text-primary-foreground/70">Elevate Your Space</span>
             </span>
           </Link>
@@ -48,7 +48,7 @@ export function AuthShell({
               ))}
             </ul>
           </div>
-          <p className="text-xs text-primary-foreground/60">© {new Date().getFullYear()} FurniCraft. All rights reserved.</p>
+          <p className="text-xs text-primary-foreground/60">© {new Date().getFullYear()} pajedhowfurnitures. All rights reserved.</p>
         </div>
       </div>
 
@@ -59,7 +59,7 @@ export function AuthShell({
             <span className="flex size-10 items-center justify-center rounded-md bg-accent text-accent-foreground">
               <Sofa className="size-5" />
             </span>
-            <span className="text-lg font-bold text-foreground">FurniCraft</span>
+            <span className="text-lg font-bold text-foreground">pajedhowfurnitures</span>
           </Link>
           <h1 className="text-2xl font-bold text-foreground">{title}</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>

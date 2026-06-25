@@ -34,12 +34,19 @@ function FacebookIcon() {
   )
 }
 
-export function SocialAuth({ action = "Sign in" }: { action?: string }) {
+export function SocialAuth({
+  action = "Sign in",
+  onProvider,
+}: {
+  action?: string
+  onProvider?: (provider: "google" | "facebook") => void
+}) {
   return (
     <div className="grid gap-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <button
           type="button"
+          onClick={() => onProvider?.("google")}
           className="flex items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary"
         >
           <GoogleIcon />
@@ -47,6 +54,7 @@ export function SocialAuth({ action = "Sign in" }: { action?: string }) {
         </button>
         <button
           type="button"
+          onClick={() => onProvider?.("facebook")}
           className="flex items-center justify-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary"
         >
           <FacebookIcon />

@@ -3,7 +3,7 @@ import { Breadcrumb, PageShell } from "@/components/page-shell"
 import { WishlistView } from "@/components/wishlist/wishlist-view"
 
 export const metadata: Metadata = {
-  title: "Wishlist — FurniCraft",
+  title: "Wishlist — pajedhowfurnitures",
 }
 
 export default function WishlistPage() {

@@ -11,7 +11,7 @@ export function FeaturedProducts() {
         actionLabel="View All"
         actionHref="/shop"
       />
-      <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
         {featuredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

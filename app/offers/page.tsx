@@ -7,8 +7,8 @@ import { ProductCard } from "@/components/product-card"
 import { products } from "@/lib/data"
 
 export const metadata: Metadata = {
-  title: "Offers & Deals — FurniCraft",
-  description: "Save big on stylish furniture with FurniCraft's seasonal offers and discounts.",
+  title: "Offers & Deals — pajedhowfurnitures",
+  description: "Save big on stylish furniture with pajedhowfurnitures's seasonal offers and discounts.",
 }
 
 const promoCodes = [
@@ -64,7 +64,7 @@ export default function OffersPage() {
       {/* Discounted products */}
       <section className="mt-12">
         <h2 className="text-xl font-bold text-foreground">On Sale Now</h2>
-        <div className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-3 lg:grid-cols-3">
           {onSale.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

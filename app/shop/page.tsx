@@ -4,7 +4,7 @@ import { Breadcrumb, PageShell } from "@/components/page-shell"
 import { ShopBrowser } from "@/components/shop/shop-browser"
 
 export const metadata: Metadata = {
-  title: "Shop — FurniCraft",
+  title: "Shop — pajedhowfurnitures",
 }
 
 export default function ShopPage() {

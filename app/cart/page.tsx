@@ -3,7 +3,7 @@ import { Breadcrumb, PageShell } from "@/components/page-shell"
 import { CartView } from "@/components/cart/cart-view"
 
 export const metadata: Metadata = {
-  title: "Shopping Cart — FurniCraft",
+  title: "Shopping Cart — pajedhowfurnitures",
 }
 
 export default function CartPage() {

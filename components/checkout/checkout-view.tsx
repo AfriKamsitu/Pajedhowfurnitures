@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { CheckCircle2, CreditCard, Truck } from "lucide-react"
 import { formatPrice } from "@/lib/data"
 import { useStore } from "@/components/store-provider"
+import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
 
 const inputClass =
@@ -15,6 +16,7 @@ const inputClass =
 export function CheckoutView() {
   const router = useRouter()
   const { cart, cartTotal, clearCart } = useStore()
+  const { user, addOrder } = useAuth()
   const [payment, setPayment] = useState<"card" | "mobile" | "cod">("card")
   const [placed, setPlaced] = useState(false)
 
@@ -23,9 +25,23 @@ export function CheckoutView() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (user) {
+      addOrder({
+        id: Math.random().toString(36).slice(2, 8).toUpperCase(),
+        date: new Date().toISOString(),
+        status: "Processing",
+        total,
+        items: cart.map((item) => ({
+          name: item.product.name,
+          image: item.product.image,
+          quantity: item.quantity,
+          price: item.product.price,
+        })),
+      })
+    }
     setPlaced(true)
     clearCart()
-    setTimeout(() => router.push("/"), 3500)
+    setTimeout(() => router.push(user ? "/account/orders" : "/"), 3500)
   }
 
   if (placed) {
@@ -36,7 +52,7 @@ export function CheckoutView() {
         </span>
         <h2 className="text-2xl font-bold text-foreground">Order Placed!</h2>
         <p className="max-w-sm text-sm text-muted-foreground">
-          Thank you for shopping with FurniCraft. A confirmation has been sent to your email. Redirecting you home…
+          Thank you for shopping with pajedhowfurnitures. A confirmation has been sent to your email. Redirecting you home…
         </p>
         <Link
           href="/shop"

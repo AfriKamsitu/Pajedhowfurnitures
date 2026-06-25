@@ -7,6 +7,7 @@ import { ChevronDown, Heart, Menu, Search, ShoppingCart, Sofa, User, X } from "l
 import { cn } from "@/lib/utils"
 import { categories } from "@/lib/data"
 import { useStore } from "@/components/store-provider"
+import { useAuth } from "@/components/auth-provider"
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -23,6 +24,7 @@ export function SiteHeader() {
   const pathname = usePathname()
   const router = useRouter()
   const { cartCount, wishlistCount } = useStore()
+  const { user } = useAuth()
   const [query, setQuery] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
   const [catOpen, setCatOpen] = useState(false)
@@ -50,7 +52,7 @@ export function SiteHeader() {
               <Sofa className="size-5" />
             </span>
             <span className="leading-tight">
-              <span className="block text-lg font-bold text-foreground">FurniCraft</span>
+              <span className="block text-lg font-bold text-foreground">pajedhowfurnitures</span>
               <span className="block text-[11px] text-muted-foreground">Elevate Your Space</span>
             </span>
           </Link>
@@ -103,9 +105,13 @@ export function SiteHeader() {
               </span>
               <span className="hidden text-[11px] sm:block">Cart</span>
             </Link>
-            <Link href="/login" className="flex flex-col items-center gap-0.5 text-foreground" aria-label="Login">
+            <Link
+              href={user ? "/account" : "/login"}
+              className="flex flex-col items-center gap-0.5 text-foreground"
+              aria-label={user ? "Account" : "Login"}
+            >
               <User className="size-5" />
-              <span className="hidden text-[11px] sm:block">Login</span>
+              <span className="hidden text-[11px] sm:block">{user ? user.name.split(" ")[0] || "Account" : "Login"}</span>
             </Link>
           </div>
         </div>

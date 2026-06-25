@@ -3,7 +3,7 @@ import { Breadcrumb, PageShell } from "@/components/page-shell"
 import { CheckoutView } from "@/components/checkout/checkout-view"
 
 export const metadata: Metadata = {
-  title: "Checkout — FurniCraft",
+  title: "Checkout — pajedhowfurnitures",
 }
 
 export default function CheckoutPage() {

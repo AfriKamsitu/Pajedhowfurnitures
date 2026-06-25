@@ -6,8 +6,8 @@ import { Breadcrumb, PageShell } from "@/components/page-shell"
 import { TrustBar } from "@/components/trust-bar"
 
 export const metadata: Metadata = {
-  title: "About Us — FurniCraft",
-  description: "Learn about FurniCraft's mission to bring stylish, quality furniture to every home.",
+  title: "About Us — pajedhowfurnitures",
+  description: "Learn about pajedhowfurnitures's mission to bring stylish, quality furniture to every home.",
 }
 
 const stats = [
@@ -36,7 +36,7 @@ export default function AboutPage() {
             Crafting comfort for every home since 2014
           </h1>
           <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
-            FurniCraft began with a simple belief: beautiful, durable furniture should be within everyone&apos;s reach.
+            pajedhowfurnitures began with a simple belief: beautiful, durable furniture should be within everyone&apos;s reach.
             From a small workshop to a beloved brand, we&apos;ve stayed true to thoughtful design, honest materials, and
             craftsmanship that lasts for generations.
           </p>
@@ -51,7 +51,7 @@ export default function AboutPage() {
           </Link>
         </div>
         <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-secondary">
-          <Image src="/showroom.png" alt="FurniCraft furniture showroom" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
+          <Image src="/showroom.png" alt="pajedhowfurnitures furniture showroom" fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
         </div>
       </section>
 
