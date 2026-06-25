@@ -233,7 +233,7 @@ export function ShopBrowser() {
           <div
             className={cn(
               view === "grid"
-                ? "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+                ? "grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3"
                 : "flex flex-col gap-4",
             )}
           >

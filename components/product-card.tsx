@@ -2,9 +2,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Heart, ShoppingCart } from "lucide-react"
+import { Heart, ScanSearch, ShoppingCart, Star } from "lucide-react"
 import { type Product, formatPrice } from "@/lib/data"
-import { StarRating } from "@/components/star-rating"
 import { useStore } from "@/components/store-provider"
 import { cn } from "@/lib/utils"
 
@@ -13,15 +12,16 @@ export function ProductCard({ product }: { product: Product }) {
   const wished = isInWishlist(product.id)
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-soft ring-1 ring-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated hover:ring-accent/30">
-      <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
+    <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-elevated">
+      {/* Image */}
+      <div className="relative aspect-square overflow-hidden rounded-t-xl bg-secondary">
         <Link href={`/product/${product.id}`}>
           <Image
             src={product.image || "/placeholder.svg"}
             alt={product.name}
             fill
-            sizes="(max-width: 768px) 50vw, 25vw"
-            className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         </Link>
         {product.isNew && (
@@ -29,6 +29,15 @@ export function ProductCard({ product }: { product: Product }) {
             New
           </span>
         )}
+        {/* Alibaba-style quick-view magnifier (bottom-left) */}
+        <Link
+          href={`/product/${product.id}`}
+          aria-label={`Quick view ${product.name}`}
+          className="absolute bottom-3 left-3 flex size-9 items-center justify-center rounded-full bg-card/90 text-foreground shadow-soft backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:text-accent"
+        >
+          <ScanSearch className="size-4" />
+        </Link>
+        {/* Wishlist (top-right) */}
         <button
           aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
           onClick={() => toggleWishlist(product)}
@@ -39,28 +48,39 @@ export function ProductCard({ product }: { product: Product }) {
         >
           <Heart className={cn("size-4 transition-transform", wished && "scale-110 fill-accent")} />
         </button>
-        <button
-          onClick={() => addToCart(product)}
-          className="absolute inset-x-3 bottom-3 flex translate-y-12 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-xs font-semibold text-primary-foreground opacity-0 shadow-elevated transition-all duration-300 hover:bg-primary/90 group-hover:translate-y-0 group-hover:opacity-100"
-        >
-          <ShoppingCart className="size-3.5" />
-          Add to Cart
-        </button>
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-4">
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-4">
         <Link
           href={`/product/${product.id}`}
-          className="text-sm font-medium text-foreground transition-colors hover:text-accent"
+          className="line-clamp-2 text-sm leading-snug text-foreground transition-colors hover:text-accent"
         >
           {product.name}
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-base font-bold text-primary">{formatPrice(product.price)}</span>
+
+        <div className="mt-0.5 flex flex-wrap items-baseline gap-2">
+          <span className="text-lg font-bold text-foreground">{formatPrice(product.price)}</span>
           {product.oldPrice && (
             <span className="text-xs text-muted-foreground line-through">{formatPrice(product.oldPrice)}</span>
           )}
         </div>
-        <StarRating rating={product.rating} reviews={product.reviews} />
+
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Star className="size-3.5 fill-accent text-accent" />
+          <span className="font-medium text-foreground">{product.rating.toFixed(1)}</span>
+          <span>({product.reviews})</span>
+          <span className="mx-1 text-border">|</span>
+          <span className="truncate">{product.material}</span>
+        </div>
+
+        <button
+          onClick={() => addToCart(product)}
+          className="mt-auto flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
+        >
+          <ShoppingCart className="size-3.5" />
+          Add to Cart
+        </button>
       </div>
     </div>
   )
