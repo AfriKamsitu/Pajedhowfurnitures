@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { ChevronDown, LayoutGrid, List } from "lucide-react"
+import { ChevronDown, LayoutGrid, List, SlidersHorizontal } from "lucide-react"
 import {
   categories,
   colorSwatches,
@@ -33,6 +33,7 @@ export function ShopBrowser() {
   const [sortOpen, setSortOpen] = useState(false)
   const [view, setView] = useState<"grid" | "list">("grid")
   const [page, setPage] = useState(1)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const searching = query.length > 0
   const activeCategoryName = searching
@@ -64,9 +65,18 @@ export function ShopBrowser() {
   }, [activeCategory, maxPrice, activeColor, activeMaterials, sort, query, searching])
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[260px_1fr] lg:gap-8">
+      {/* Mobile filter toggle */}
+      <button
+        onClick={() => setFiltersOpen((v) => !v)}
+        className="flex items-center justify-center gap-2 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground lg:hidden"
+      >
+        <SlidersHorizontal className="size-4" />
+        {filtersOpen ? "Hide Filters" : "Show Filters"}
+      </button>
+
       {/* Sidebar */}
-      <aside className="space-y-6">
+      <aside className={cn("space-y-6 lg:block", filtersOpen ? "block" : "hidden")}>
         <div className="rounded-lg border border-border bg-card p-5">
           <h3 className="mb-3 text-sm font-semibold text-foreground">Categories</h3>
           <ul className="space-y-1">

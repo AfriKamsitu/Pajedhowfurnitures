@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Eye, EyeOff, Lock, Mail } from "lucide-react"
 import { authInputClass } from "@/components/auth/auth-shell"
+import { SocialAuth } from "@/components/auth/social-auth"
 
 export function LoginForm() {
   const [show, setShow] = useState(false)
@@ -16,6 +17,7 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5">
+      <SocialAuth action="Sign in" />
       {submitted && (
         <p className="rounded-md border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-foreground">
           This is a demo sign-in form. Connect an auth provider to enable real accounts.

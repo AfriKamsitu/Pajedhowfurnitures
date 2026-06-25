@@ -50,16 +50,16 @@ export function ProductDetail({ product }: { product: Product }) {
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-2">
+    <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
       {/* Gallery */}
-      <div className="flex gap-4">
-        <div className="flex flex-col gap-3">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:gap-4">
+        <div className="flex flex-row gap-3 overflow-x-auto pb-1 sm:flex-col sm:overflow-visible sm:pb-0">
           {gallery.map((img, i) => (
             <button
               key={i}
               onClick={() => setActive(i)}
               className={cn(
-                "relative size-16 overflow-hidden rounded-md border-2 bg-secondary",
+                "relative size-14 shrink-0 overflow-hidden rounded-md border-2 bg-secondary sm:size-16",
                 active === i ? "border-accent" : "border-border",
               )}
               aria-label={`View image ${i + 1}`}
@@ -96,7 +96,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
       {/* Info */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">{product.name}</h1>
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{product.name}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <StarRating rating={product.rating} size="md" />
