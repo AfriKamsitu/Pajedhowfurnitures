@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, Loader2, LogOut, MapPin, Package, User as UserIcon } from "lucide-react"
+import { LayoutDashboard, Loader2, LogOut, MapPin, Package, ShieldCheck, User as UserIcon } from "lucide-react"
 import { PageShell, Breadcrumb } from "@/components/page-shell"
 import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
@@ -81,6 +81,15 @@ export function AccountShell({
                 </Link>
               )
             })}
+            {user.role === "admin" && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary hover:text-accent"
+              >
+                <ShieldCheck className="size-4" />
+                Admin Panel
+              </Link>
+            )}
             <button
               onClick={handleSignOut}
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"

@@ -3,9 +3,17 @@
 import { useState } from "react"
 import { Bell, Menu, Search } from "lucide-react"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { useAuth } from "@/components/auth-provider"
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { user } = useAuth()
+  const initials = (user?.name || "Admin User")
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
 
   return (
     <div className="admin-theme flex min-h-screen bg-background text-foreground">
@@ -40,7 +48,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <span className="absolute right-2 top-2 size-2 rounded-full bg-destructive" />
             </button>
             <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-              AU
+              {initials || "AU"}
             </span>
           </div>
         </header>

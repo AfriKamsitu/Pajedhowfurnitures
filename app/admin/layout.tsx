@@ -1,11 +1,16 @@
 import type { Metadata } from "next"
 import { AdminShell } from "@/components/admin/admin-shell"
+import { AdminGuard } from "@/components/admin/admin-guard"
 
 export const metadata: Metadata = {
-  title: "FurniHouse — Admin Panel",
+  title: "pajedhowfurnitures — Admin Panel",
   description: "Manage products, orders, customers and store settings.",
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminShell>{children}</AdminShell>
+  return (
+    <AdminGuard>
+      <AdminShell>{children}</AdminShell>
+    </AdminGuard>
+  )
 }

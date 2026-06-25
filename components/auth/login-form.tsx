@@ -2,15 +2,22 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react"
 import { authInputClass } from "@/components/auth/auth-shell"
 import { SocialAuth } from "@/components/auth/social-auth"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth, type Role } from "@/components/auth-provider"
 
 export function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get("redirect")
   const { signIn, signInWithProvider } = useAuth()
+
+  function destinationFor(role?: Role) {
+    if (redirectTo) return redirectTo
+    return role === "admin" ? "/admin" : "/account"
+  }
   const [show, setShow] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -21,22 +28,22 @@ export function LoginForm() {
     e.preventDefault()
     setError(null)
     setLoading(true)
-    const { error } = await signIn({ email, password })
+    const { error, role } = await signIn({ email, password })
     setLoading(false)
     if (error) {
       setError(error)
       return
     }
-    router.push("/account")
+    router.push(destinationFor(role))
     router.refresh()
   }
 
   async function handleProvider(provider: "google" | "facebook") {
     setError(null)
     setLoading(true)
-    await signInWithProvider(provider)
+    const { role } = await signInWithProvider(provider)
     setLoading(false)
-    router.push("/account")
+    router.push(destinationFor(role))
     router.refresh()
   }
 

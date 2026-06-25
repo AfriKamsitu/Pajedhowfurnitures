@@ -1,7 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Activity,
   BarChart3,
@@ -11,15 +12,17 @@ import {
   Image as ImageIcon,
   LayoutDashboard,
   LayoutGrid,
+  LogOut,
   ShieldCheck,
   ShoppingCart,
   Star,
+  Store,
   Settings,
-  Tag,
   Ticket,
   Users,
   X,
 } from "lucide-react"
+import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
 
 const mainNav = [
@@ -76,9 +79,24 @@ export function AdminSidebar({
   onClose: () => void
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, signOut } = useAuth()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href)
+
+  const initials = (user?.name || "Admin User")
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
+
+  function handleSignOut() {
+    signOut()
+    router.push("/")
+  }
 
   return (
     <>
@@ -102,7 +120,7 @@ export function AdminSidebar({
               <Box className="size-5" />
             </span>
             <span className="leading-tight">
-              <span className="block text-base font-bold text-foreground">FurniHouse</span>
+              <span className="block text-base font-bold text-foreground">pajedhowfurnitures</span>
               <span className="block text-[11px] text-muted-foreground">Admin Panel</span>
             </span>
           </Link>
@@ -131,16 +149,38 @@ export function AdminSidebar({
         </nav>
 
         {/* Admin profile */}
-        <div className="border-t border-sidebar-border p-3">
-          <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-sidebar-accent">
+        <div className="relative border-t border-sidebar-border p-3">
+          {menuOpen && (
+            <div className="absolute inset-x-3 bottom-full mb-1 overflow-hidden rounded-lg border border-border bg-popover shadow-elevated">
+              <Link
+                href="/"
+                onClick={onClose}
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-secondary"
+              >
+                <Store className="size-4" />
+                Back to store
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+              >
+                <LogOut className="size-4" />
+                Sign out
+              </button>
+            </div>
+          )}
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-sidebar-accent"
+          >
             <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-              AU
+              {initials || "AU"}
             </span>
             <span className="flex-1 leading-tight">
-              <span className="block text-sm font-semibold text-foreground">Admin User</span>
-              <span className="block text-[11px] text-muted-foreground">Super Admin</span>
+              <span className="block truncate text-sm font-semibold text-foreground">{user?.name || "Admin User"}</span>
+              <span className="block text-[11px] capitalize text-muted-foreground">{user?.role ?? "admin"}</span>
             </span>
-            <ChevronDown className="size-4 text-muted-foreground" />
+            <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", menuOpen && "rotate-180")} />
           </button>
         </div>
       </aside>

@@ -23,7 +23,7 @@ export function RegisterForm() {
     e.preventDefault()
     setError(null)
     setLoading(true)
-    const { error } = await signUp({
+    const { error, role } = await signUp({
       name: `${firstName} ${lastName}`.trim(),
       email,
       password,
@@ -33,16 +33,16 @@ export function RegisterForm() {
       setError(error)
       return
     }
-    router.push("/account")
+    router.push(role === "admin" ? "/admin" : "/account")
     router.refresh()
   }
 
   async function handleProvider(provider: "google" | "facebook") {
     setError(null)
     setLoading(true)
-    await signInWithProvider(provider)
+    const { role } = await signInWithProvider(provider)
     setLoading(false)
-    router.push("/account")
+    router.push(role === "admin" ? "/admin" : "/account")
     router.refresh()
   }
 
