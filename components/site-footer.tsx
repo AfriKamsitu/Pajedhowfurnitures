@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { Globe, Mail, MessageCircle, Send, Sofa } from "lucide-react"
+import Image from "next/image"
+import { Globe, Mail, MessageCircle, Send } from "lucide-react"
 
 const columns = [
   {
@@ -41,12 +42,18 @@ export function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2.5">
-              <span className="flex size-10 items-center justify-center rounded-md bg-accent text-accent-foreground">
-                <Sofa className="size-5" />
+              <span className="flex size-11 items-center justify-center rounded-md bg-primary-foreground">
+                <Image
+                  src="/paje-dhow-logo.png"
+                  alt="Paje Dhow Furniture logo"
+                  width={44}
+                  height={44}
+                  className="size-9 object-contain"
+                />
               </span>
               <span className="leading-tight">
-                <span className="block text-lg font-bold">pajedhowfurnitures</span>
-                <span className="block text-[11px] text-primary-foreground/70">Elevate Your Space</span>
+                <span className="block text-base font-bold uppercase tracking-wide">Paje Dhow</span>
+                <span className="block text-[11px] uppercase tracking-[0.2em] text-primary-foreground/70">Furniture</span>
               </span>
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-primary-foreground/70">

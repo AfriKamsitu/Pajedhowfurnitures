@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Activity,
@@ -132,11 +133,11 @@ export function AdminSidebar({
         {/* Brand */}
         <div className="flex items-center justify-between px-5 py-5">
           <Link href="/admin" className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Box className="size-5" />
+            <span className="flex size-9 items-center justify-center rounded-lg bg-primary">
+              <Image src="/paje-dhow-logo.png" alt="Paje Dhow Furniture logo" width={36} height={36} className="size-7 object-contain" />
             </span>
             <span className="leading-tight">
-              <span className="block text-base font-bold text-foreground">pajedhowfurnitures</span>
+              <span className="block text-base font-bold uppercase tracking-wide text-foreground">Paje Dhow</span>
               <span className="block text-[11px] text-muted-foreground">Admin Panel</span>
             </span>
           </Link>
