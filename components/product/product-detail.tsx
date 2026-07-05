@@ -166,9 +166,9 @@ export function ProductDetail({ product }: { product: Product }) {
               </p>
             </div>
             <div className="text-right leading-tight">
-              <p className="flex items-center justify-end gap-1 text-sm font-semibold text-foreground">
+              <div className="flex items-center justify-end gap-1 text-sm font-semibold text-foreground">
                 <StarRating rating={meta.supplier.rating} size="sm" /> {meta.supplier.rating}
-              </p>
+              </div>
               <p className="text-[11px] text-muted-foreground">Replies {meta.supplier.responseTime}</p>
             </div>
           </div>
@@ -300,7 +300,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <ul className="list-inside list-disc space-y-1">
                 <li>Premium {product.material.toLowerCase()} finish with reinforced joints</li>
                 <li>Solid hardwood frame for long-lasting durability</li>
-                <li>Available in multiple colours — confirm options with the seller</li>
+                <li>Available in multiple colours �� confirm options with the seller</li>
                 <li>Professional delivery and assembly included</li>
               </ul>
             </div>
