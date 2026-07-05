@@ -2,17 +2,14 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   BadgeCheck,
   ChevronLeft,
   ChevronRight,
   Clock,
-  FileText,
   Heart,
   MapPin,
-  MessageCircle,
   Minus,
   Package,
   Plus,
@@ -26,6 +23,7 @@ import { StarRating } from "@/components/star-rating"
 import { ProductCard } from "@/components/product-card"
 import { useStore } from "@/components/store-provider"
 import { openWhatsApp, productEnquiryMessage } from "@/lib/whatsapp"
+import { WhatsAppGlyph } from "@/components/whatsapp-glyph"
 import { cn } from "@/lib/utils"
 
 type Tab = "description" | "specifications" | "delivery" | "reviews"
@@ -220,19 +218,12 @@ export function ProductDetail({ product }: { product: Product }) {
               onClick={handleChat}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1ebe5b]"
             >
-              <MessageCircle className="size-4" />
+              <WhatsAppGlyph className="size-4" />
               Chat on WhatsApp
             </button>
-            <Link
-              href={`/quote/${product.id}`}
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-6 py-3.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
-            >
-              <FileText className="size-4" />
-              Request Quote
-            </Link>
             <button
               onClick={handlePlaceOrder}
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-6 py-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary sm:col-span-2"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <ShoppingBag className="size-4" />
               Place Order
@@ -300,7 +291,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <ul className="list-inside list-disc space-y-1">
                 <li>Premium {product.material.toLowerCase()} finish with reinforced joints</li>
                 <li>Solid hardwood frame for long-lasting durability</li>
-                <li>Available in multiple colours �� confirm options with the seller</li>
+                <li>Available in multiple colours ��� confirm options with the seller</li>
                 <li>Professional delivery and assembly included</li>
               </ul>
             </div>

@@ -6,7 +6,6 @@ import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import {
   ChevronDown,
-  FileText,
   Heart,
   LayoutDashboard,
   LogOut,
@@ -24,7 +23,6 @@ import { cn } from "@/lib/utils"
 const shopNav = [
   { label: "Dashboard", href: "/account", icon: LayoutDashboard },
   { label: "My Orders", href: "/account/orders", icon: Package },
-  { label: "My Quotes", href: "/account/quotes", icon: FileText },
   { label: "Wishlist", href: "/wishlist", icon: Heart },
   { label: "Cart", href: "/cart", icon: ShoppingBag },
 ]
