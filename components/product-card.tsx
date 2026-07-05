@@ -5,7 +5,7 @@ import Image from "next/image"
 import { FileText, Heart, MessageCircle, ScanSearch, Star } from "lucide-react"
 import { type Product, formatPrice } from "@/lib/data"
 import { useStore } from "@/components/store-provider"
-import { openChat } from "@/components/chat/chat-widget"
+import { openWhatsApp, productEnquiryMessage } from "@/lib/whatsapp"
 import { cn } from "@/lib/utils"
 
 export function ProductCard({ product }: { product: Product }) {
@@ -77,11 +77,15 @@ export function ProductCard({ product }: { product: Product }) {
 
         <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
           <button
-            onClick={() => openChat({ id: product.id, name: product.name, price: product.price, image: product.image })}
-            className="flex items-center justify-center gap-1.5 rounded-lg bg-primary py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            onClick={() =>
+              openWhatsApp(
+                productEnquiryMessage({ id: product.id, name: product.name, price: product.price, image: product.image }),
+              )
+            }
+            className="flex items-center justify-center gap-1.5 rounded-lg bg-[#25D366] py-2 text-xs font-semibold text-white transition-colors hover:bg-[#1ebe5b]"
           >
             <MessageCircle className="size-3.5" />
-            Chat
+            WhatsApp
           </button>
           <Link
             href={`/quote/${product.id}`}

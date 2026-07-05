@@ -5,62 +5,50 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import {
-  Activity,
-  BarChart3,
-  Box,
   ChevronDown,
   FileText,
-  Image as ImageIcon,
+  Heart,
   LayoutDashboard,
-  LayoutGrid,
   LogOut,
+  MapPin,
+  Package,
   ShieldCheck,
-  ShoppingCart,
-  Star,
+  ShoppingBag,
   Store,
-  Settings,
-  Ticket,
-  Users,
+  User as UserIcon,
   X,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
 
-const mainNav = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
-  { label: "Products", href: "/admin/products", icon: Box },
-  { label: "Categories", href: "/admin/categories", icon: LayoutGrid },
-  { label: "Customers", href: "/admin/customers", icon: Users },
-  { label: "Reviews", href: "/admin/reviews", icon: Star },
-  { label: "Coupons", href: "/admin/coupons", icon: Ticket },
-  { label: "Banners", href: "/admin/banners", icon: ImageIcon },
-  { label: "Reports", href: "/admin/reports", icon: FileText },
+const shopNav = [
+  { label: "Dashboard", href: "/account", icon: LayoutDashboard },
+  { label: "My Orders", href: "/account/orders", icon: Package },
+  { label: "My Quotes", href: "/account/quotes", icon: FileText },
+  { label: "Wishlist", href: "/wishlist", icon: Heart },
+  { label: "Cart", href: "/cart", icon: ShoppingBag },
 ]
 
-const manageNav = [
-  { label: "Users & Roles", href: "/admin/users", icon: ShieldCheck },
-  { label: "System Settings", href: "/admin/settings", icon: Settings },
-  { label: "Activity Logs", href: "/admin/activity", icon: Activity },
+const accountNav = [
+  { label: "Addresses", href: "/account/addresses", icon: MapPin },
+  { label: "Profile", href: "/account/profile", icon: UserIcon },
 ]
 
 function NavLink({
   item,
   active,
   onNavigate,
-  badge = 0,
 }: {
   item: { label: string; href: string; icon: React.ElementType }
   active: boolean
   onNavigate?: () => void
-  badge?: number
 }) {
   const Icon = item.icon
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
         active
@@ -70,36 +58,19 @@ function NavLink({
     >
       <Icon className="size-[18px]" />
       <span className="flex-1">{item.label}</span>
-      {badge > 0 && (
-        <span
-          className={cn(
-            "flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold",
-            active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-accent text-accent-foreground",
-          )}
-        >
-          {badge}
-        </span>
-      )}
     </Link>
   )
 }
 
-export function AdminSidebar({
-  open,
-  onClose,
-}: {
-  open: boolean
-  onClose: () => void
-}) {
+export function AccountSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const isActive = (href: string) =>
-    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href)
+  const isActive = (href: string) => (href === "/account" ? pathname === "/account" : pathname.startsWith(href))
 
-  const initials = (user?.name || "Admin User")
+  const initials = (user?.name || "Buyer")
     .split(" ")
     .map((p) => p[0])
     .slice(0, 2)
@@ -113,13 +84,7 @@ export function AdminSidebar({
 
   return (
     <>
-      {open && (
-        <div
-          className="fixed inset-0 z-40 bg-foreground/40 lg:hidden"
-          onClick={onClose}
-          aria-hidden
-        />
-      )}
+      {open && <div className="fixed inset-0 z-40 bg-foreground/40 lg:hidden" onClick={onClose} aria-hidden />}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-sidebar-border bg-sidebar transition-transform lg:static lg:z-auto lg:translate-x-0",
@@ -128,13 +93,13 @@ export function AdminSidebar({
       >
         {/* Brand */}
         <div className="flex items-center justify-between px-5 py-5">
-          <Link href="/admin" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             <span className="flex size-9 items-center justify-center rounded-lg bg-primary">
               <Image src="/paje-dhow-logo.png" alt="Paje Dhow Furniture logo" width={36} height={36} className="size-7 object-contain" />
             </span>
             <span className="leading-tight">
               <span className="block text-base font-bold uppercase tracking-wide text-foreground">Paje Dhow</span>
-              <span className="block text-[11px] text-muted-foreground">Admin Panel</span>
+              <span className="block text-[11px] text-muted-foreground">My Account</span>
             </span>
           </Link>
           <button onClick={onClose} className="text-muted-foreground lg:hidden" aria-label="Close menu">
@@ -144,24 +109,34 @@ export function AdminSidebar({
 
         <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
           <div>
-            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Main</p>
+            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Shopping</p>
             <div className="space-y-1">
-              {mainNav.map((item) => (
+              {shopNav.map((item) => (
                 <NavLink key={item.href} item={item} active={isActive(item.href)} onNavigate={onClose} />
               ))}
             </div>
           </div>
           <div>
-            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Manage</p>
+            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Account</p>
             <div className="space-y-1">
-              {manageNav.map((item) => (
+              {accountNav.map((item) => (
                 <NavLink key={item.href} item={item} active={isActive(item.href)} onNavigate={onClose} />
               ))}
+              {user?.role === "admin" && (
+                <Link
+                  href="/admin"
+                  onClick={onClose}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                >
+                  <ShieldCheck className="size-[18px]" />
+                  <span className="flex-1">Admin Panel</span>
+                </Link>
+              )}
             </div>
           </div>
         </nav>
 
-        {/* Admin profile */}
+        {/* Profile footer */}
         <div className="relative border-t border-sidebar-border p-3">
           {menuOpen && (
             <div className="absolute inset-x-3 bottom-full mb-1 overflow-hidden rounded-lg border border-border bg-popover shadow-elevated">
@@ -186,12 +161,12 @@ export function AdminSidebar({
             onClick={() => setMenuOpen((v) => !v)}
             className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-sidebar-accent"
           >
-            <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-              {initials || "AU"}
+            <span className="flex size-9 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
+              {initials || "B"}
             </span>
             <span className="flex-1 leading-tight">
-              <span className="block truncate text-sm font-semibold text-foreground">{user?.name || "Admin User"}</span>
-              <span className="block text-[11px] capitalize text-muted-foreground">{user?.role ?? "admin"}</span>
+              <span className="block truncate text-sm font-semibold text-foreground">{user?.name || "Buyer"}</span>
+              <span className="block truncate text-[11px] text-muted-foreground">{user?.email}</span>
             </span>
             <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", menuOpen && "rotate-180")} />
           </button>

@@ -25,7 +25,7 @@ import { type Product, formatPrice, getProductMeta, getRelatedProducts } from "@
 import { StarRating } from "@/components/star-rating"
 import { ProductCard } from "@/components/product-card"
 import { useStore } from "@/components/store-provider"
-import { openChat } from "@/components/chat/chat-widget"
+import { openWhatsApp, productEnquiryMessage } from "@/lib/whatsapp"
 import { cn } from "@/lib/utils"
 
 type Tab = "description" | "specifications" | "delivery" | "reviews"
@@ -48,13 +48,13 @@ export function ProductDetail({ product }: { product: Product }) {
   const discount = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : null
 
   function handleChat() {
-    openChat(ref)
+    openWhatsApp(productEnquiryMessage(ref))
   }
 
   function handlePlaceOrder() {
-    openChat(ref, {
-      message: `I would like to place an order for ${product.name} (Qty: ${qty}). Please confirm availability, final price and delivery details.`,
-    })
+    openWhatsApp(
+      `Hello Paje Dhow Furniture, I would like to place an order for *${product.name}* (Qty: ${qty}). Please confirm availability, final price and delivery details.`,
+    )
   }
 
   function handleCompare() {
@@ -139,7 +139,7 @@ export function ProductDetail({ product }: { product: Product }) {
             )}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Price shown is for reference. Final pricing is confirmed by the seller via chat or quotation.
+            Price shown is for reference. Final pricing is confirmed by the seller via WhatsApp or quotation.
           </p>
 
           {/* Stock + MOQ */}
@@ -218,10 +218,10 @@ export function ProductDetail({ product }: { product: Product }) {
           <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <button
               onClick={handleChat}
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1ebe5b]"
             >
               <MessageCircle className="size-4" />
-              Chat with Seller
+              Chat on WhatsApp
             </button>
             <Link
               href={`/quote/${product.id}`}
@@ -328,8 +328,8 @@ export function ProductDetail({ product }: { product: Product }) {
                 accepted offline.
               </InfoBlock>
               <InfoBlock icon={ShieldCheck} title="Warranty">
-                {meta.warrantyMonths}-month manufacturer warranty against structural defects. Contact the seller through
-                chat to arrange any warranty service.
+                {meta.warrantyMonths}-month manufacturer warranty against structural defects. Contact the seller on
+                WhatsApp to arrange any warranty service.
               </InfoBlock>
               <InfoBlock icon={Clock} title="Lead time">
                 Made-to-order customisations may extend the lead time. Discuss timelines directly with {meta.supplier.name}.
@@ -350,11 +350,11 @@ export function ProductDetail({ product }: { product: Product }) {
                 </div>
                 <p className="flex-1 text-sm">
                   Buyers consistently praise the build quality, comfort and the responsive support from{" "}
-                  {meta.supplier.name}. Have a question? Start a chat to hear from recent buyers.
+                  {meta.supplier.name}. Have a question? Message us on WhatsApp to hear from recent buyers.
                 </p>
               </div>
               {[
-                { name: "Amani K.", text: "Excellent quality and the seller answered all my questions on chat before I ordered." },
+                { name: "Amani K.", text: "Excellent quality and the seller answered all my questions on WhatsApp before I ordered." },
                 { name: "Neema J.", text: "Delivery was on time and assembly was included. Very happy with the finish." },
               ].map((r) => (
                 <div key={r.name} className="rounded-lg border border-border bg-card p-4">

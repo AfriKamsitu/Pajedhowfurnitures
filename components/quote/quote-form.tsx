@@ -5,10 +5,11 @@ import Image from "next/image"
 import Link from "next/link"
 import { CheckCircle2, FileText, MessageCircle } from "lucide-react"
 import { type Product, formatPrice, getProductMeta } from "@/lib/data"
-import { openChat } from "@/components/chat/chat-widget"
+import { addQuoteRequest } from "@/lib/quote-requests"
+import { openWhatsApp } from "@/lib/whatsapp"
 import { cn } from "@/lib/utils"
 
-const MATERIALS = ["As shown", "Fabric", "Leather", "Wood", "Metal"]
+const MATERIALS = ["As shown", "Reclaimed Wood", "Teak", "Mahogany", "Hardwood"]
 
 export function QuoteForm({ product }: { product: Product }) {
   const meta = getProductMeta(product)
@@ -21,10 +22,9 @@ export function QuoteForm({ product }: { product: Product }) {
   const [instructions, setInstructions] = useState("")
   const [submitted, setSubmitted] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const lines = [
-      `Quote request — ${product.name}`,
+  function buildMessage() {
+    return [
+      `*Quote request — ${product.name}*`,
       `Reference price: ${formatPrice(product.price)}`,
       `Quantity: ${quantity}`,
       `Preferred colour: ${color}`,
@@ -34,10 +34,29 @@ export function QuoteForm({ product }: { product: Product }) {
       customization && `Customisation: ${customization}`,
       instructions && `Special instructions: ${instructions}`,
       "Please send your best quotation including delivery. Thank you.",
-    ].filter(Boolean)
-    openChat({ id: product.id, name: product.name, price: product.price, image: product.image }, {
-      message: lines.join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n")
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const message = buildMessage()
+    addQuoteRequest({
+      productId: product.id,
+      productName: product.name,
+      productImage: product.image,
+      price: product.price,
+      quantity,
+      color,
+      material,
+      location,
+      deliveryDate: date,
+      customization,
+      instructions,
+      message,
     })
+    openWhatsApp(message)
     setSubmitted(true)
   }
 
@@ -47,16 +66,16 @@ export function QuoteForm({ product }: { product: Product }) {
         <CheckCircle2 className="mx-auto size-12 text-primary" />
         <h2 className="mt-4 text-xl font-bold text-foreground">Quote request sent</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Your request for <span className="font-medium text-foreground">{product.name}</span> has been sent to the
-          seller. Continue the conversation in chat to negotiate pricing and confirm delivery. You can also attach room
-          photos there.
+          Your request for <span className="font-medium text-foreground">{product.name}</span> has opened in WhatsApp and
+          is saved under <span className="font-medium text-foreground">My Quotes</span>. Continue the conversation on
+          WhatsApp to negotiate pricing, confirm delivery and share room photos.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
-            onClick={() => openChat({ id: product.id, name: product.name, price: product.price, image: product.image })}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            onClick={() => openWhatsApp(buildMessage())}
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#1ebe5b]"
           >
-            <MessageCircle className="size-4" /> Open chat
+            <MessageCircle className="size-4" /> Continue on WhatsApp
           </button>
           <Link
             href="/account/quotes"
@@ -124,7 +143,7 @@ export function QuoteForm({ product }: { product: Product }) {
           />
         </Labeled>
         <p className="text-xs text-muted-foreground">
-          You can attach room photos and documents directly in the chat that opens after you submit.
+          Submitting opens WhatsApp with your request pre-filled — you can attach room photos and documents there.
         </p>
         <button
           type="submit"

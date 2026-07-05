@@ -1,59 +1,35 @@
 "use client"
 
-import { useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { FileText, MessageCircle } from "lucide-react"
-import { useChat, type Quote } from "@/components/chat-provider"
+import { FileText, MessageCircle, Trash2 } from "lucide-react"
 import { formatPrice } from "@/lib/data"
-import { openChat } from "@/components/chat/chat-widget"
+import { useQuoteRequests, removeQuoteRequest, type QuoteStatus } from "@/lib/quote-requests"
+import { openWhatsApp } from "@/lib/whatsapp"
 import { cn } from "@/lib/utils"
 
-type QuoteRow = {
-  conversationId: string
-  createdAt: number
-  productName: string
-  productImage?: string
-  productId?: string
-  quote: Quote
+const statusStyles: Record<QuoteStatus, string> = {
+  sent: "bg-amber-100 text-amber-700",
+  answered: "bg-green-100 text-green-700",
+  closed: "bg-secondary text-muted-foreground",
 }
 
-const statusStyles: Record<Quote["status"], string> = {
-  pending: "bg-amber-100 text-amber-700",
-  accepted: "bg-green-100 text-green-700",
-  revision: "bg-blue-100 text-blue-700",
+const statusLabels: Record<QuoteStatus, string> = {
+  sent: "Sent",
+  answered: "Answered",
+  closed: "Closed",
 }
 
 export function QuotesView() {
-  const { myConversations, messagesFor } = useChat()
+  const quotes = useQuoteRequests()
 
-  const rows = useMemo<QuoteRow[]>(() => {
-    const out: QuoteRow[] = []
-    for (const conv of myConversations) {
-      for (const m of messagesFor(conv.id)) {
-        if (m.type === "quote" && m.quote) {
-          out.push({
-            conversationId: conv.id,
-            createdAt: m.createdAt,
-            productName: m.quote.productName || conv.product?.name || "Custom request",
-            productImage: conv.product?.image,
-            productId: m.quote.productId || conv.product?.id,
-            quote: m.quote,
-          })
-        }
-      }
-    }
-    return out.sort((a, b) => b.createdAt - a.createdAt)
-  }, [myConversations, messagesFor])
-
-  if (rows.length === 0) {
+  if (quotes.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
         <FileText className="mx-auto size-10 text-muted-foreground" />
         <h2 className="mt-3 font-semibold text-foreground">No quotes yet</h2>
         <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-          Request a quote from any product and the seller&apos;s tailored offers will appear here, ready to review and
-          accept.
+          Request a quote from any product and it will be saved here. We&apos;ll reply on WhatsApp with a tailored offer.
         </p>
         <Link
           href="/shop"
@@ -67,9 +43,9 @@ export function QuotesView() {
 
   return (
     <div className="space-y-3">
-      {rows.map((row, i) => (
+      {quotes.map((row) => (
         <div
-          key={`${row.conversationId}-${i}`}
+          key={row.id}
           className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center"
         >
           <span className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
@@ -84,32 +60,37 @@ export function QuotesView() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-semibold text-foreground">{row.productName}</p>
-              <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize", statusStyles[row.quote.status])}>
-                {row.quote.status}
+              <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", statusStyles[row.status])}>
+                {statusLabels[row.status]}
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {row.quote.quantity} unit(s) · {row.quote.discountPct}% off · {row.quote.etaDays}-day delivery
+              {row.quantity} unit(s)
+              {row.material && row.material !== "As shown" ? ` · ${row.material}` : ""}
+              {row.location ? ` · ${row.location}` : ""}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Quoted {new Date(row.createdAt).toLocaleDateString()}
+              Requested {new Date(row.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-            <p className="text-lg font-bold text-primary">{formatPrice(row.quote.total)}</p>
-            <button
-              onClick={() =>
-                openChat(
-                  row.productId
-                    ? { id: row.productId, name: row.productName, price: row.quote.unitPrice, image: row.productImage || "" }
-                    : undefined,
-                )
-              }
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
-            >
-              <MessageCircle className="size-3.5" />
-              Open chat
-            </button>
+          <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
+            {row.price ? <p className="text-lg font-bold text-primary">{formatPrice(row.price)}</p> : <span />}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => openWhatsApp(row.message)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#1ebe5b]"
+              >
+                <MessageCircle className="size-3.5" />
+                WhatsApp
+              </button>
+              <button
+                onClick={() => removeQuoteRequest(row.id)}
+                aria-label="Remove quote request"
+                className="inline-flex items-center justify-center rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </div>
           </div>
         </div>
       ))}
