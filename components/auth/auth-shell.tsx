@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Sofa } from "lucide-react"
 import type { ReactNode } from "react"
 
 const perks = [
@@ -27,12 +26,12 @@ export function AuthShell({
         <Image src={image || "/placeholder.svg"} alt="" fill sizes="50vw" className="object-cover opacity-25" />
         <div className="relative flex h-full flex-col justify-between p-12 text-primary-foreground">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex size-10 items-center justify-center rounded-md bg-accent text-accent-foreground">
-              <Sofa className="size-5" />
+            <span className="flex size-11 items-center justify-center rounded-md bg-primary-foreground">
+              <Image src="/paje-dhow-logo.png" alt="Paje Dhow Furniture logo" width={44} height={44} className="size-9 object-contain" />
             </span>
             <span className="leading-tight">
-              <span className="block text-lg font-bold">pajedhowfurnitures</span>
-              <span className="block text-[11px] text-primary-foreground/70">Elevate Your Space</span>
+              <span className="block text-base font-bold uppercase tracking-wide">Paje Dhow</span>
+              <span className="block text-[11px] uppercase tracking-[0.2em] text-primary-foreground/70">Furniture</span>
             </span>
           </Link>
           <div>
@@ -56,10 +55,8 @@ export function AuthShell({
       <div className="flex items-center justify-center bg-background px-4 py-12 sm:px-8">
         <div className="w-full max-w-md">
           <Link href="/" className="mb-8 flex items-center gap-2.5 lg:hidden">
-            <span className="flex size-10 items-center justify-center rounded-md bg-accent text-accent-foreground">
-              <Sofa className="size-5" />
-            </span>
-            <span className="text-lg font-bold text-foreground">pajedhowfurnitures</span>
+            <Image src="/paje-dhow-logo.png" alt="Paje Dhow Furniture logo" width={44} height={44} className="size-10 object-contain" />
+            <span className="text-base font-bold uppercase tracking-wide text-foreground">Paje Dhow Furniture</span>
           </Link>
           <h1 className="text-2xl font-bold text-foreground">{title}</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>

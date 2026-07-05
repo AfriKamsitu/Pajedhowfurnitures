@@ -20,26 +20,13 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: 'pajedhowfurnitures — Elevate Your Space',
+  title: 'Paje Dhow Furniture — Handcrafted Living',
   description:
     'Discover a wide range of stylish and quality furniture for every room. Sofas, beds, dining sets, chairs and more.',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/paje-dhow-logo.png',
+    apple: '/paje-dhow-logo.png',
   },
 }
 

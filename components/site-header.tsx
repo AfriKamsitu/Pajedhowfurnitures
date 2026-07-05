@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { ChevronDown, Heart, Menu, Search, ShoppingCart, Sofa, User, X } from "lucide-react"
+import Image from "next/image"
+import { ChevronDown, Heart, Menu, Search, ShoppingCart, User, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { categories } from "@/lib/data"
 import { useStore } from "@/components/store-provider"
@@ -48,12 +49,17 @@ export function SiteHeader() {
           </button>
 
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex size-10 items-center justify-center rounded-md bg-accent text-accent-foreground">
-              <Sofa className="size-5" />
-            </span>
+            <Image
+              src="/paje-dhow-logo.png"
+              alt="Paje Dhow Furniture logo"
+              width={48}
+              height={48}
+              className="size-11 object-contain"
+              priority
+            />
             <span className="leading-tight">
-              <span className="block text-lg font-bold text-foreground">pajedhowfurnitures</span>
-              <span className="block text-[11px] text-muted-foreground">Elevate Your Space</span>
+              <span className="block text-base font-bold uppercase tracking-wide text-foreground">Paje Dhow</span>
+              <span className="block text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Furniture</span>
             </span>
           </Link>
 
