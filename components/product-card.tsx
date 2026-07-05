@@ -2,10 +2,11 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { FileText, Heart, MessageCircle, ScanSearch, Star } from "lucide-react"
+import { Heart, ScanSearch, Star } from "lucide-react"
 import { type Product, formatPrice } from "@/lib/data"
 import { useStore } from "@/components/store-provider"
-import { openChat } from "@/components/chat/chat-widget"
+import { openWhatsApp, productEnquiryMessage } from "@/lib/whatsapp"
+import { WhatsAppGlyph } from "@/components/whatsapp-glyph"
 import { cn } from "@/lib/utils"
 
 export function ProductCard({ product }: { product: Product }) {
@@ -16,7 +17,7 @@ export function ProductCard({ product }: { product: Product }) {
     <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-elevated">
       {/* Image */}
       <div className="relative aspect-square overflow-hidden rounded-t-xl bg-secondary">
-        <Link href={`/product/${product.id}`}>
+        <Link href={`/product/${product.id}`} className="absolute inset-0 block">
           <Image
             src={product.image || "/placeholder.svg"}
             alt={product.name}
@@ -75,21 +76,24 @@ export function ProductCard({ product }: { product: Product }) {
           <span className="truncate">{product.material}</span>
         </div>
 
-        <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
-          <button
-            onClick={() => openChat({ id: product.id, name: product.name, price: product.price, image: product.image })}
-            className="flex items-center justify-center gap-1.5 rounded-lg bg-primary py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <MessageCircle className="size-3.5" />
-            Chat
-          </button>
+        <div className="mt-auto flex items-center gap-2 pt-1">
           <Link
-            href={`/quote/${product.id}`}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card py-2 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+            href={`/product/${product.id}`}
+            className="flex flex-1 items-center justify-center rounded-lg bg-primary py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            <FileText className="size-3.5" />
-            Quote
+            View Details
           </Link>
+          <button
+            onClick={() =>
+              openWhatsApp(
+                productEnquiryMessage({ id: product.id, name: product.name, price: product.price, image: product.image }),
+              )
+            }
+            aria-label="Chat on WhatsApp"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#25D366] text-white transition-colors hover:bg-[#1ebe5b]"
+          >
+            <WhatsAppGlyph className="size-4" />
+          </button>
         </div>
       </div>
     </div>

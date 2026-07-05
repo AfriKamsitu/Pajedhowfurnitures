@@ -3,8 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Poppins } from 'next/font/google'
 import { StoreProvider } from '@/components/store-provider'
 import { AuthProvider } from '@/components/auth-provider'
-import { ChatProvider } from '@/components/chat-provider'
-import { ChatWidget } from '@/components/chat/chat-widget'
+import { WhatsAppButton } from '@/components/whatsapp-button'
 import './globals.css'
 
 const inter = Inter({
@@ -47,10 +46,8 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased">
         <AuthProvider>
-          <ChatProvider>
-            <StoreProvider>{children}</StoreProvider>
-            <ChatWidget />
-          </ChatProvider>
+          <StoreProvider>{children}</StoreProvider>
+          <WhatsAppButton />
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

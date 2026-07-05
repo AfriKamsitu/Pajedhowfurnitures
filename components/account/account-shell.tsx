@@ -1,112 +1,106 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { FileText, LayoutDashboard, Loader2, LogOut, MapPin, Package, ShieldCheck, User as UserIcon } from "lucide-react"
-import { PageShell, Breadcrumb } from "@/components/page-shell"
+import { useRouter } from "next/navigation"
+import { ChevronRight, Loader2, Menu, MessageCircle, Store } from "lucide-react"
+import { AccountSidebar } from "@/components/account/account-sidebar"
 import { useAuth } from "@/components/auth-provider"
-import { cn } from "@/lib/utils"
-
-const navItems = [
-  { label: "Dashboard", href: "/account", icon: LayoutDashboard },
-  { label: "My Orders", href: "/account/orders", icon: Package },
-  { label: "My Quotes", href: "/account/quotes", icon: FileText },
-  { label: "Addresses", href: "/account/addresses", icon: MapPin },
-  { label: "Profile", href: "/account/profile", icon: UserIcon },
-]
+import { openWhatsApp } from "@/lib/whatsapp"
 
 export function AccountShell({
   title,
+  breadcrumb = ["My Account", title],
+  actions,
   children,
 }: {
   title: string
+  breadcrumb?: string[]
+  actions?: React.ReactNode
   children: React.ReactNode
 }) {
-  const { user, loading, signOut } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
-  const pathname = usePathname()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/login")
+    if (!loading && !user) router.replace("/login?redirect=/account")
   }, [loading, user, router])
 
   if (loading || !user) {
     return (
-      <PageShell>
-        <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
-          <Loader2 className="size-6 animate-spin" />
-        </div>
-      </PageShell>
+      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
+        <Loader2 className="size-6 animate-spin" />
+      </div>
     )
   }
 
-  function handleSignOut() {
-    signOut()
-    router.push("/")
-  }
+  const initials = (user.name || "Buyer")
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
 
   return (
-    <PageShell>
-      <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "My Account", href: "/account" }, { label: title }]} />
+    <div className="flex min-h-screen bg-background text-foreground">
+      <AccountSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr]">
-        {/* Sidebar */}
-        <aside className="space-y-4">
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-soft">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent text-lg font-bold text-accent-foreground">
-              {user.name.charAt(0).toUpperCase() || "U"}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Topbar */}
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur lg:px-6">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-muted-foreground lg:hidden"
+            aria-label="Open menu"
+          >
+            <Menu className="size-5" />
+          </button>
+
+          <Link
+            href="/"
+            className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary sm:inline-flex"
+          >
+            <Store className="size-4" />
+            Store
+          </Link>
+
+          <div className="ml-auto flex items-center gap-3">
+            <button
+              onClick={() =>
+                openWhatsApp("Hello Paje Dhow Furniture, I need help with my account/order.")
+              }
+              className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[#1ebe5b]"
+            >
+              <MessageCircle className="size-4" />
+              <span className="hidden sm:inline">Support</span>
+            </button>
+            <span className="flex size-9 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
+              {initials || "B"}
             </span>
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-foreground">{user.name || "Buyer"}</p>
-              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          </div>
+        </header>
+
+        <main className="flex-1 p-4 lg:p-6">
+          {/* Page header */}
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+              <nav className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground" aria-label="Breadcrumb">
+                {breadcrumb.map((crumb, i) => (
+                  <span key={crumb} className="flex items-center gap-1.5">
+                    {i > 0 && <ChevronRight className="size-3.5" />}
+                    <span className={i === breadcrumb.length - 1 ? "text-foreground" : undefined}>{crumb}</span>
+                  </span>
+                ))}
+              </nav>
             </div>
+            {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
           </div>
 
-          <nav className="grid gap-1 rounded-xl border border-border bg-card p-2 shadow-soft">
-            {navItems.map((item) => {
-              const active = pathname === item.href
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-foreground hover:bg-secondary hover:text-accent",
-                  )}
-                >
-                  <item.icon className="size-4" />
-                  {item.label}
-                </Link>
-              )
-            })}
-            {user.role === "admin" && (
-              <Link
-                href="/admin"
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary hover:text-accent"
-              >
-                <ShieldCheck className="size-4" />
-                Admin Panel
-              </Link>
-            )}
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
-            >
-              <LogOut className="size-4" />
-              Sign Out
-            </button>
-          </nav>
-        </aside>
-
-        {/* Content */}
-        <section>
-          <h1 className="mb-5 text-2xl font-bold text-foreground">{title}</h1>
           {children}
-        </section>
+        </main>
       </div>
-    </PageShell>
+    </div>
   )
 }
