@@ -16,7 +16,7 @@ export function ProductCard({ product }: { product: Product }) {
     <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-elevated">
       {/* Image */}
       <div className="relative aspect-square overflow-hidden rounded-t-xl bg-secondary">
-        <Link href={`/product/${product.id}`}>
+        <Link href={`/product/${product.id}`} className="absolute inset-0">
           <Image
             src={product.image || "/placeholder.svg"}
             alt={product.name}
