@@ -3,10 +3,10 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, User } from "lucide-react"
+import { Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react"
 import { authInputClass } from "@/components/auth/auth-shell"
 import { SocialAuth } from "@/components/auth/social-auth"
-import { useAuth, type Role, DEMO_ADMIN, DEMO_CUSTOMER } from "@/components/auth-provider"
+import { useAuth, type Role, DEMO_CUSTOMER } from "@/components/auth-provider"
 
 export function LoginForm() {
   const router = useRouter()
@@ -56,37 +56,21 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="grid gap-5">
       <div className="rounded-lg border border-accent/30 bg-accent/5 p-4">
-        <p className="mb-3 text-sm font-semibold text-foreground">Demo credentials</p>
-        <div className="grid gap-2">
-          <button
-            type="button"
-            onClick={() => fillDemo(DEMO_ADMIN)}
-            className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:border-accent hover:bg-secondary"
-          >
-            <ShieldCheck className="size-4 shrink-0 text-accent" />
-            <span className="flex-1 leading-tight">
-              <span className="block text-sm font-medium text-foreground">Admin</span>
-              <span className="block text-xs text-muted-foreground">
-                {DEMO_ADMIN.email} · {DEMO_ADMIN.password}
-              </span>
+        <p className="mb-3 text-sm font-semibold text-foreground">Demo customer login</p>
+        <button
+          type="button"
+          onClick={() => fillDemo(DEMO_CUSTOMER)}
+          className="flex w-full items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:border-accent hover:bg-secondary"
+        >
+          <User className="size-4 shrink-0 text-muted-foreground" />
+          <span className="flex-1 leading-tight">
+            <span className="block text-sm font-medium text-foreground">Customer</span>
+            <span className="block text-xs text-muted-foreground">
+              {DEMO_CUSTOMER.email} · {DEMO_CUSTOMER.password}
             </span>
-            <span className="text-xs font-medium text-accent">Use</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => fillDemo(DEMO_CUSTOMER)}
-            className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:border-accent hover:bg-secondary"
-          >
-            <User className="size-4 shrink-0 text-muted-foreground" />
-            <span className="flex-1 leading-tight">
-              <span className="block text-sm font-medium text-foreground">Customer</span>
-              <span className="block text-xs text-muted-foreground">
-                {DEMO_CUSTOMER.email} · {DEMO_CUSTOMER.password}
-              </span>
-            </span>
-            <span className="text-xs font-medium text-accent">Use</span>
-          </button>
-        </div>
+          </span>
+          <span className="text-xs font-medium text-accent">Use</span>
+        </button>
       </div>
       <SocialAuth action="Sign in" onProvider={handleProvider} />
       {error && (
