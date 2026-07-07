@@ -29,7 +29,24 @@ export type Order = {
   items: { name: string; image: string; quantity: number; price: number }[]
 }
 
-export type Role = "admin" | "customer"
+export type Role = "super_admin" | "admin" | "customer"
+
+// True for any staff member who can reach the admin panel.
+export function isStaff(role?: Role): boolean {
+  return role === "super_admin" || role === "admin"
+}
+
+// True only for the top-level Super Admin (Users & Roles, Settings, Activity Logs).
+export function isSuperAdmin(role?: Role): boolean {
+  return role === "super_admin"
+}
+
+// Human-readable label for a role, used in the admin UI.
+export function roleLabel(role?: Role): string {
+  if (role === "super_admin") return "Super Admin"
+  if (role === "admin") return "Admin"
+  return "Customer"
+}
 
 export type User = {
   id: string
