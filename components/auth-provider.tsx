@@ -60,10 +60,23 @@ export type User = {
   orders: Order[]
 }
 
-// Any email starting with "admin@" is provisioned as an admin account.
-// This keeps the demo usable without a backend role table.
+// Email-prefix based role provisioning. Mirrors the backend role tiers so the
+// demo works without a live role table:
+//   superadmin@ -> super_admin (full control incl. Users, Settings, Activity)
+//   admin@ / manager@ / editor@ / support@ -> admin (operational staff)
+//   anything else -> customer
 function roleForEmail(email: string): Role {
-  return email.trim().toLowerCase().startsWith("admin@") ? "admin" : "customer"
+  const e = email.trim().toLowerCase()
+  if (e.startsWith("superadmin@")) return "super_admin"
+  if (
+    e.startsWith("admin@") ||
+    e.startsWith("manager@") ||
+    e.startsWith("editor@") ||
+    e.startsWith("support@")
+  ) {
+    return "admin"
+  }
+  return "customer"
 }
 
 type StoredUser = User & { password: string }
